@@ -1,6 +1,4 @@
-Here’s a **draft README.md** for your tool, **CellSexID**, based on the information you've provided. It's structured to cover the tool's purpose, usage, and context.
-
----
+ 
 
 # CellSexID
 
