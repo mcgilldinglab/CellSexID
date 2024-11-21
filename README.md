@@ -1,11 +1,15 @@
+ 
 # CellSexID
 
 CellSexID is a streamlined and user-friendly tool designed to predict the biological sex of cells based on single-cell RNA-seq data. It leverages machine learning models trained on publicly available datasets to make accurate predictions on user-provided single-cell input data.
 
 ![Figure 1: Overview of CellSexID workflow](fig1.jpg)
 
-
-*Figure 1: Overview of the CellSexID workflow. [ a, Identification of sex-specific gene features for predicting cell origin in single-cell RNA sequencing data. A committee of four classifiers (Random Forest, Logistic Regression, SVM, XGBoost) selects genes deemed critical for distinguishing cell sex, based on majority voting across models. b, Experimental validation of CellSexID using chimeric mouse models. The single-cell RNA-seq data from chimeric mice are used to test classifiers pre-trained on a public dataset, with predictions based on the selected gene features. Diaphragm macrophages from female mice transplanted with male bone marrow are isolated, flow-sorted, barcoded, and sequenced, serving as ground truth for validating CellSexID predictions. c, Evaluation of the model's predictive performance using various metrics calculated against flow cytometry-derived ground truth, providing an assessment of reliability. d, Application of CellSexID for annotating cell origin in chimeric mice enables a range of single-cell analyses, supporting studies of cellular dynamics and differences between recipient and donor cells in diverse research contexts. ]*
+*Figure 1: Overview of the CellSexID workflow.*
+- **a.** Identification of sex-specific gene features for predicting cell origin in single-cell RNA sequencing data. A committee of four classifiers (Random Forest, Logistic Regression, SVM, XGBoost) selects genes deemed critical for distinguishing cell sex, based on majority voting across models.
+- **b.** Experimental validation of CellSexID using chimeric mouse models. The single-cell RNA-seq data from chimeric mice are used to test classifiers pre-trained on a public dataset, with predictions based on the selected gene features. Diaphragm macrophages from female mice transplanted with male bone marrow are isolated, flow-sorted, barcoded, and sequenced, serving as ground truth for validating CellSexID predictions.
+- **c.** Evaluation of the model's predictive performance using various metrics calculated against flow cytometry-derived ground truth, providing an assessment of reliability.
+- **d.** Application of CellSexID for annotating cell origin in chimeric mice enables a range of single-cell analyses, supporting studies of cellular dynamics and differences between recipient and donor cells in diverse research contexts.
 
 ---
 
@@ -99,14 +103,31 @@ CellSexID provides a command-line interface to train models and predict the biol
 
 1. **Prepare Your Data:**
 
-   - **Training Data (`.h5ad`):** Should include gene expression data with genes as variables and cells as observations. Must contain a `gender` column in `adata.obs` with binary labels (`0` for Female, `1` for Male).
-   - **Test Data (`.h5ad`):** Gene expression data of the cells you want to predict.
+   - **Training Data (`preprocessed_data.h5ad`):**
+     - We provide a preprocessed training data file, `preprocessed_data.zip`, which contains `preprocessed_data.h5ad`.
+     - **Download and Extract Training Data:**
+       - The zipped training data file is included in the repository.
+       - Unzip the file:
+         ```bash
+         unzip preprocessed_data.zip
+         ```
+       - This will extract `preprocessed_data.h5ad`, which you can use for training.
+
+     - **Contents of Training Data:**
+       - Includes gene expression data with genes as variables and cells as observations.
+       - Contains a `gender` column in `adata.obs` with binary labels:
+         - `0` for Female
+         - `1` for Male
+
+   - **Test Data (`.h5ad`):**
+     - Gene expression data of the cells you want to predict.
+     - Should be in H5AD format with genes as variables and cells as observations.
 
 2. **Run the Prediction Script:**
 
    ```bash
    cellsexid-run \
-       --train_data <path_to_training_data.h5ad> \
+       --train_data preprocessed_data.h5ad \
        --test_data <path_to_test_data.h5ad> \
        --model XGB \
        --output predictions.csv \
@@ -221,7 +242,17 @@ sex_predictor = SexPredictionTool()
   - Genes as variables (`adata.var_names`).
   - Cells as observations (`adata.obs_names`).
 - **Training Data Requirements:**
-  - Must include a `gender` column in `adata.obs` with binary labels (`0` for Female, `1` for Male`).
+  - Must include a `gender` column in `adata.obs` with binary labels:
+    - `0` for Female
+    - `1` for Male
+  - **Provided Training Data:**
+    - The repository includes a zipped training data file, `preprocessed_data.zip`.
+    - **Instructions to Access:**
+      - Unzip the file:
+        ```bash
+        unzip preprocessed_data.zip
+        ```
+      - This will extract `preprocessed_data.h5ad`, which you can use for training.
 - **Selected Genes:**
   - The tool uses a predefined list of genes:
     - `'Rpl35'`, `'Rps27rt'`, `'Rpl9-ps6'`, `'Rps27'`, `'Uba52'`, `'Lars2'`, `'Gm42418'`, `'Uty'`, `'Kdm5d'`, `'Eif2s3y'`, `'Ddx3y'`, `'Xist'`
@@ -242,11 +273,21 @@ sex_predictor = SexPredictionTool()
 
 1. **Prepare Training Data (`preprocessed_data.h5ad`):**
 
-   - Contains gene expression data and a `gender` column with labels.
+   - **Access the Training Data:**
+     - The training data is provided in the repository as `preprocessed_data.zip`.
+     - Unzip the file:
+       ```bash
+       unzip preprocessed_data.zip
+       ```
+     - This will extract `preprocessed_data.h5ad`.
+
+   - **Contents of Training Data:**
+     - Contains gene expression data and a `gender` column with binary labels (`0` for Female, `1` for Male).
 
 2. **Prepare Test Data (`sex_chimeric_gender_9_25.h5ad`):**
 
    - Contains gene expression data of cells to predict.
+   - Ensure that the selected genes are present in this dataset.
 
 3. **Run the Prediction Script:**
 
@@ -295,7 +336,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For questions or support, please contact [Huilin Tai] 2378174791@qq.com.
+For questions or support, please contact **Huilin Tai** at [2378174791@qq.com](mailto:2378174791@qq.com).
 
 ---
 
@@ -319,9 +360,6 @@ For questions or support, please contact [Huilin Tai] 2378174791@qq.com.
 - [Example Workflow](#example-workflow)
 - [Publication on bioRxiv](#publication)
 
- 
- 
-
 ---
 
 By following this guide, you can set up and use CellSexID for your single-cell RNA-seq data analysis, leveraging its powerful prediction capabilities and integrating it into your research pipeline.
@@ -333,3 +371,6 @@ By following this guide, you can set up and use CellSexID for your single-cell R
 ---
 
 **Happy Analyzing!**
+
+---
+ 
