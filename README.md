@@ -1,4 +1,6 @@
- 
+
+---
+
 # CellSexID
 
 CellSexID is a streamlined and user-friendly tool designed to predict the biological sex of cells based on single-cell RNA-seq data. It leverages machine learning models trained on publicly available datasets to make accurate predictions on user-provided single-cell input data.
@@ -6,6 +8,7 @@ CellSexID is a streamlined and user-friendly tool designed to predict the biolog
 ![Figure 1: Overview of CellSexID workflow](fig1.jpg)
 
 *Figure 1: Overview of the CellSexID workflow.*
+
 - **a.** Identification of sex-specific gene features for predicting cell origin in single-cell RNA sequencing data. A committee of four classifiers (Random Forest, Logistic Regression, SVM, XGBoost) selects genes deemed critical for distinguishing cell sex, based on majority voting across models.
 - **b.** Experimental validation of CellSexID using chimeric mouse models. The single-cell RNA-seq data from chimeric mice are used to test classifiers pre-trained on a public dataset, with predictions based on the selected gene features. Diaphragm macrophages from female mice transplanted with male bone marrow are isolated, flow-sorted, barcoded, and sequenced, serving as ground truth for validating CellSexID predictions.
 - **c.** Evaluation of the model's predictive performance using various metrics calculated against flow cytometry-derived ground truth, providing an assessment of reliability.
@@ -20,7 +23,7 @@ CellSexID is a streamlined and user-friendly tool designed to predict the biolog
 - **Accurate Predictions:** Utilizes advanced machine learning models (XGBoost, Logistic Regression, SVM, Random Forest).
 - **Visualization:** Provides options to visualize the distribution of predicted sexes.
 - **Command-Line Interface:** Easy-to-use CLI for seamless integration into pipelines.
-- **Detailed Tutorial:** Our notebook includes everything, serving as a comprehensive tutorial covering all steps, including model training and prediction.
+- **Detailed Tutorial:** Our notebook serves as a comprehensive tutorial covering all steps, including model training and prediction.
 
 ---
 
@@ -217,7 +220,7 @@ A class that encapsulates the functionality for training and predicting cell sex
 You can install CellSexID as a package using pip:
 
 ```bash
-pip install git+https://github.com/yourusername/CellSexID.git
+pip install git+https://github.com/mcgilldinglab/CellSexID.git
 ```
 
 This allows you to import `SexPredictionTool` in your own scripts:
@@ -311,13 +314,15 @@ sex_predictor = SexPredictionTool()
 
 Our research article detailing CellSexID is now available on bioRxiv:
 
-[Link to bioRxiv article](https://www.biorxiv.org/content/early/recent)
+[CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data](https://doi.org/10.1101/xxxxxxxxxxx)
+
+*Note: Replace `xxxxxxxxxxx` with the actual DOI or link to the article.*
 
 ---
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions or would like to report issues, please submit them through the [Issues](https://github.com/yourusername/CellSexID/issues) section of the repository.
+Contributions are welcome! If you have suggestions or would like to report issues, please submit them through the [Issues](https://github.com/mcgilldinglab/CellSexID/issues) section of the repository.
 
 ---
 
@@ -373,4 +378,3 @@ By following this guide, you can set up and use CellSexID for your single-cell R
 **Happy Analyzing!**
 
 ---
- 
