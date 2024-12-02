@@ -6,11 +6,10 @@
 CellSexID is a streamlined and user-friendly tool designed to predict the biological sex of cells based on single-cell RNA-seq data. It leverages machine learning models trained on publicly available datasets to make accurate predictions on user-provided single-cell input data.
 
 
-<div align="center" style="margin-left: -20%;">
+<div style="text-align: center; margin: 20px 0;">
   <img src="fig1.jpg" alt="Figure 1: Overview of CellSexID workflow">
   <p><em>Figure 1: Overview of the CellSexID workflow.</em></p>
 </div>
-*Figure 1: Overview of the CellSexID workflow.*
 
 - **a.** Identification of sex-specific gene features for predicting cell origin in single-cell RNA sequencing data. A committee of four classifiers (Random Forest, Logistic Regression, SVM, XGBoost) selects genes deemed critical for distinguishing cell sex, based on majority voting across models.
 - **b.** Experimental validation of CellSexID using chimeric mouse models. The single-cell RNA-seq data from chimeric mice are used to test classifiers pre-trained on a public dataset, with predictions based on the selected gene features. Diaphragm macrophages from female mice transplanted with male bone marrow are isolated, flow-sorted, barcoded, and sequenced, serving as ground truth for validating CellSexID predictions.
