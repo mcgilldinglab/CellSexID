@@ -6,7 +6,7 @@
 CellSexID is a streamlined and user-friendly tool designed to predict the biological sex of cells based on single-cell RNA-seq data. It leverages machine learning models trained on publicly available datasets to make accurate predictions on user-provided single-cell input data.
 
 
-<div align="center">
+<div align="center" style="margin-left: -20%;">
   <img src="fig1.jpg" alt="Figure 1: Overview of CellSexID workflow">
   <p><em>Figure 1: Overview of the CellSexID workflow.</em></p>
 </div>
