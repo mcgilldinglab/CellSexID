@@ -316,7 +316,7 @@ sex_predictor = SexPredictionTool()
 
 Our research article detailing CellSexID is now available on bioRxiv:
 
-[CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data](https://doi.org/10.1101/xxxxxxxxxxx)
+[CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data]((https://www.biorxiv.org/content/10.1101/2024.12.02.626449v1))
  
 
 ---
