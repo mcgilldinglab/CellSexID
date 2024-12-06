@@ -12,7 +12,21 @@ CellSexID is a streamlined and user-friendly tool designed to predict the biolog
 - **c.** Evaluation of the model's predictive performance using various metrics calculated against flow cytometry-derived ground truth, providing an assessment of reliability.
 - **d.** Application of CellSexID for annotating cell origin in chimeric mice enables a range of single-cell analyses, supporting studies of cellular dynamics and differences between recipient and donor cells in diverse research contexts.
 
-## Key Features
+
+## Key Contributions and Impact
+
+### Transformative Methodology
+CellSexID eliminates the need for exogenous labeling or cross-breeding strategies by leveraging endogenous gene expression associated with biological sex. This significantly reduces cost and complexity, positioning CellSexID as a robust and scalable solution for experimental and clinical applications.
+
+### Biological Discovery
+Using sex as a natural surrogate marker, CellSexID enabled the identification of a unique subset of tissue-resident macrophages in skeletal muscle. These macrophages, derived from bone marrow-independent embryonic origins, exhibit an anti-inflammatory and pro-regenerative gene expression profile. This discovery underscores the role of cellular ontogeny in shaping immune responses and highlights CellSexID’s ability to uncover functional differences that were previously challenging to resolve.
+
+### Real-World Validation
+CellSexID demonstrated high concordance with flow cytometry ground truth data, validating its accuracy in distinguishing bone marrow-derived and bone marrow-independent macrophages. This underscores its utility for exploring cell-specific behaviors and gene expression profiles across diverse biological systems.
+
+
+
+## Tech Features
 
 - **Simplified Workflow:** Trains on public datasets to ensure accessibility and reproducibility
 - **Single-Cell Focus:** Tailored for single-cell RNA-seq data input in H5AD format
@@ -194,6 +208,140 @@ cellsexid-run \
    - Open predictions.csv for detailed results
    - View the distribution plot in distribution.pdf
 
+
+ 
+
+## API Documentation
+
+### SexPredictionTool Class
+
+The main class for performing sex prediction on single-cell RNA-seq data.
+
+#### Constructor
+
+```python
+tool = SexPredictionTool()
+```
+
+Initializes a new SexPredictionTool instance with pre-configured models:
+- Logistic Regression (LR)
+- Support Vector Machine (SVM)
+- XGBoost (XGB)
+- Random Forest (RF)
+
+All models include StandardScaler preprocessing in their pipelines.
+
+#### Properties
+
+- `selected_genes`: List of genes used for prediction
+  ```python
+  ['Rpl35', 'Rps27rt', 'Rpl9-ps6', 'Rps27', 'Uba52', 'Lars2',
+   'Gm42418', 'Uty', 'Kdm5d', 'Eif2s3y', 'Ddx3y', 'Xist']
+  ```
+
+#### Methods
+
+##### process_training_data(h5ad_path)
+```python
+X_train, y_train = tool.process_training_data("path/to/training_data.h5ad")
+```
+Processes training data from an H5AD file.
+
+**Parameters:**
+- `h5ad_path` (str): Path to training data in H5AD format
+
+**Returns:**
+- `X_train` (numpy.ndarray): Feature matrix
+- `y_train` (numpy.ndarray): Labels (0 for Female, 1 for Male)
+
+**Raises:**
+- `ValueError`: If none of the selected genes are found in the dataset
+
+##### process_test_data(h5ad_path)
+```python
+X_test, cell_names = tool.process_test_data("path/to/test_data.h5ad")
+```
+Processes test data from an H5AD file.
+
+**Parameters:**
+- `h5ad_path` (str): Path to test data in H5AD format
+
+**Returns:**
+- `X_test` (numpy.ndarray): Feature matrix
+- `cell_names` (pandas.Index): Cell identifiers
+
+**Raises:**
+- `ValueError`: If none of the selected genes are found in the dataset
+
+##### train(X_train, y_train, model_name='XGB')
+```python
+tool.train(X_train, y_train, model_name='XGB')
+```
+Trains the selected model on the provided data.
+
+**Parameters:**
+- `X_train` (numpy.ndarray): Feature matrix
+- `y_train` (numpy.ndarray): Labels
+- `model_name` (str): Model to train ('LR', 'SVM', 'XGB', or 'RF')
+
+**Raises:**
+- `ValueError`: If model_name is not recognized
+
+##### predict(X_test, model_name='XGB')
+```python
+y_pred = tool.predict(X_test, model_name='XGB')
+```
+Makes predictions using the trained model.
+
+**Parameters:**
+- `X_test` (numpy.ndarray): Feature matrix
+- `model_name` (str): Model to use for prediction
+
+**Returns:**
+- `numpy.ndarray`: Predicted labels (0 for Female, 1 for Male)
+
+**Raises:**
+- `ValueError`: If model_name is not recognized
+
+##### save_predictions(y_pred, cell_names, output_file)
+```python
+tool.save_predictions(y_pred, cell_names, "predictions.csv")
+```
+Saves predictions to a CSV file.
+
+**Parameters:**
+- `y_pred` (numpy.ndarray): Predicted labels
+- `cell_names` (pandas.Index): Cell identifiers
+- `output_file` (str): Path to save predictions
+
+##### plot_prediction_distribution(y_pred, save_path)
+```python
+tool.plot_prediction_distribution(y_pred, "distribution.pdf")
+```
+Creates and saves a bar plot showing the distribution of predicted sexes.
+
+**Parameters:**
+- `y_pred` (numpy.ndarray): Predicted labels
+- `save_path` (str): Path to save the plot
+
+### Command-Line Interface
+
+The package provides a command-line interface through the `cellsexid-run` command.
+
+```bash
+cellsexid-run --train_data PATH --test_data PATH --model MODEL --output PATH --plot PATH
+```
+
+**Arguments:**
+- `--train_data`: Path to training data (H5AD format)
+- `--test_data`: Path to test data (H5AD format)
+- `--model`: Model to use (LR, SVM, XGB, or RF)
+- `--output`: Path for output CSV containing predictions
+- `--plot`: Path for output prediction distribution plot
+
+All arguments are required.
+
+ 
 ## Publication
 
 Our research article detailing CellSexID is now available on bioRxiv:
@@ -230,8 +378,6 @@ For questions or support, please contact **Huilin Tai** at [2378174791@qq.com](m
 - [Example Workflow](#example-workflow)
 - [Publication on bioRxiv](#publication)
 
-**Note:** Ensure that you have the necessary permissions and licenses for any datasets used during training and prediction.
-
-**Disclaimer:** While the installation and basic functionality should work, the package may contain bugs. Please report any issues on the GitHub repository so we can address them promptly.
+ 
 
 **Happy Analyzing!**
