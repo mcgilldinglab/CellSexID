@@ -29,286 +29,170 @@ CellSexID is a streamlined and user-friendly tool designed to predict the biolog
 
 ---
 
-## Getting Started
+Getting Started
+Prerequisites
+Before using CellSexID, ensure you have the following installed and set up:
 
-### Prerequisites
+Python Environment
+Python 3.8+
+Anaconda or Miniconda (recommended for managing environments)
+Required Libraries
+Ensure the following dependencies are installed:
 
-Before using CellSexID, ensure you have the following:
+scanpy
+anndata
+pandas
+numpy
+scikit-learn
+xgboost
+matplotlib
+seaborn
+You can install all required libraries using the requirements.txt file.
 
-- **Python 3.8+**
-- **Anaconda or Miniconda** (recommended for managing environments)
-- **Dependencies** (install via `requirements.txt`):
-  - `scanpy`
-  - `anndata`
-  - `pandas`
-  - `numpy`
-  - `scikit-learn`
-  - `xgboost`
-  - `matplotlib`
-  - `seaborn`
-- **Additional Installation via Pip:**
-  - Install the package directly from GitHub:
-    ```bash
-    pip install git+https://github.com/mcgilldinglab/CellSexID.git
-    ```
+Installation
+Option 1: Install Directly from GitHub
+The simplest way to install CellSexID is directly from GitHub using pip:
 
-### Installation
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/mcgilldinglab/CellSexID.git
-   cd CellSexID
-   ```
-
-2. **Create a virtual environment (optional but recommended):**
-
-   ```bash
-   conda create -n cellsexid_env python=3.8
-   conda activate cellsexid_env
-   ```
-
-3. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Install CellSexID package:**
-
-   ```bash
-   pip install .
-   ```
-
-   Or install directly from GitHub:
-
-   ```bash
-   pip install git+https://github.com/mcgilldinglab/CellSexID.git
-   ```
-
----
-
-## Usage
-
-Our Jupyter notebook provides a comprehensive tutorial covering all steps, including model training and prediction. It includes detailed explanations and code examples to help you understand and use CellSexID effectively.
-
-### Running Predictions via Command Line
-
-CellSexID provides a command-line interface to train models and predict the biological sex of cells in your dataset.
-
-#### Command-Line Arguments
-
-- `--train_data`: Path to the preprocessed training data in H5AD format.
-- `--test_data`: Path to the test data in H5AD format.
-- `--model`: (Optional) Machine learning model to use (`XGB`, `LR`, `SVM`, `RF`). Default is `XGB`.
-- `--output`: Path to the output CSV file where predictions will be saved.
-- `--plot`: (Optional) Path to save the distribution plot of predicted sexes.
-
-#### Running Predictions
-
-1. **Prepare Your Data:**
-
-   - **Training Data (`preprocessed_data.h5ad`):**
-     - We provide a preprocessed training data file, `preprocessed_data.zip`, which contains `preprocessed_data.h5ad`.
-     - **Download and Extract Training Data:**
-       - The zipped training data file is included in the repository.
-       - Unzip the file:
-         ```bash
-         unzip preprocessed_data.zip
-         ```
-       - This will extract `preprocessed_data.h5ad`, which you can use for training.
-
-     - **Contents of Training Data:**
-       - Includes gene expression data with genes as variables and cells as observations.
-       - Contains a `gender` column in `adata.obs` with binary labels:
-         - `0` for Female
-         - `1` for Male
-
-   - **Test Data (`.h5ad`):**
-     - Gene expression data of the cells you want to predict.
-     - Should be in H5AD format with genes as variables and cells as observations.
-
-2. **Run the Prediction Script:**
-
-   ```bash
-   cellsexid-run \
-       --train_data preprocessed_data.h5ad \
-       --test_data <path_to_test_data.h5ad> \
-       --model XGB \
-       --output predictions.csv \
-       --plot distribution.pdf
-   ```
-
-   **Example:**
-
-   ```bash
-   cellsexid-run \
-       --train_data preprocessed_data.h5ad \
-       --test_data sex_chimeric_gender_9_25.h5ad \
-       --model XGB \
-       --output predictions.csv \
-       --plot distribution.pdf
-   ```
-
-3. **Output Files:**
-
-   - **Predictions CSV (`predictions.csv`):** Contains `cell_id` and `predicted_sex` columns.
-   - **Distribution Plot (`distribution.pdf`):** Bar plot showing the percentage of cells predicted as Male or Female.
-
----
-
-## API Documentation
-
-CellSexID provides the following key functions:
-
-### `SexPredictionTool`
-
-A class that encapsulates the functionality for training and predicting cell sex.
-
-#### Methods:
-
-- `process_training_data(h5ad_path)`
-
-  - **Description:** Reads preprocessed training data from an H5AD file.
-  - **Parameters:**
-    - `h5ad_path` (str): Path to the training data H5AD file.
-  - **Returns:**
-    - `X` (numpy.ndarray): Feature matrix.
-    - `y` (numpy.ndarray): Labels array.
-
-- `process_test_data(h5ad_path)`
-
-  - **Description:** Processes test data from an H5AD file.
-  - **Parameters:**
-    - `h5ad_path` (str): Path to the test data H5AD file.
-  - **Returns:**
-    - `X_test` (numpy.ndarray): Test feature matrix.
-    - `cell_names` (list): List of cell identifiers.
-
-- `train(X_train, y_train, model_name='XGB')`
-
-  - **Description:** Trains the selected model.
-  - **Parameters:**
-    - `X_train` (numpy.ndarray): Training feature matrix.
-    - `y_train` (numpy.ndarray): Training labels array.
-    - `model_name` (str): Model to use (`XGB`, `LR`, `SVM`, `RF`).
-
-- `predict(X_test, model_name='XGB')`
-
-  - **Description:** Makes predictions using the trained model.
-  - **Parameters:**
-    - `X_test` (numpy.ndarray): Test feature matrix.
-    - `model_name` (str): Model to use.
-
-- `save_predictions(y_pred, cell_names, output_file)`
-
-  - **Description:** Saves predictions to a CSV file.
-  - **Parameters:**
-    - `y_pred` (numpy.ndarray): Predicted labels.
-    - `cell_names` (list): List of cell identifiers.
-    - `output_file` (str): Path to the output CSV file.
-
-- `plot_prediction_distribution(y_pred, save_path=None)`
-
-  - **Description:** Plots the distribution of predicted sexes.
-  - **Parameters:**
-    - `y_pred` (numpy.ndarray): Predicted labels.
-    - `save_path` (str, optional): Path to save the plot.
-
----
-
-## Installation as a Package
-
-You can install CellSexID as a package using pip:
-
-```bash
+bash
+Copy code
 pip install git+https://github.com/mcgilldinglab/CellSexID.git
-```
+This will fetch the latest version of CellSexID and make it available system-wide.
 
-This allows you to import `SexPredictionTool` in your own scripts:
+Option 2: Clone the Repository
+If you wish to modify or explore the code:
 
-```python
+Clone the repository:
+
+bash
+Copy code
+git clone https://github.com/mcgilldinglab/CellSexID.git
+cd CellSexID
+Set up a virtual environment (recommended):
+
+bash
+Copy code
+conda create -n cellsexid_env python=3.8
+conda activate cellsexid_env
+Install dependencies:
+
+bash
+Copy code
+pip install -r requirements.txt
+Install the package locally:
+
+bash
+Copy code
+pip install .
+Usage
+CellSexID can be used either through the command-line interface (CLI) or programmatically in Python.
+
+Command-Line Interface (CLI)
+Command-Line Arguments
+Argument	Description
+--train_data	Path to the preprocessed training data in .h5ad format.
+--test_data	Path to the test data in .h5ad format.
+--model	(Optional) Machine learning model to use (XGB, LR, SVM, RF). Default: XGB.
+--output	Path to the output CSV file where predictions will be saved.
+--plot	(Optional) Path to save the distribution plot of predicted sexes.
+Example Usage
+bash
+Copy code
+cellsexid-run \
+    --train_data preprocessed_data.h5ad \
+    --test_data sex_chimeric_gender_9_25.h5ad \
+    --model XGB \
+    --output predictions.csv \
+    --plot distribution.pdf
+Outputs
+Predictions CSV (predictions.csv):
+
+Contains two columns:
+cell_id: Identifiers for cells in the test dataset.
+predicted_sex: Predicted sex (Male or Female).
+Distribution Plot (distribution.pdf):
+
+Bar plot showing the percentage distribution of predicted sexes.
+Programmatic Usage
+You can use CellSexID as a Python library for greater control and integration into your custom workflows.
+
+python
+Copy code
 from cellsexid import SexPredictionTool
 
 # Initialize the tool
 sex_predictor = SexPredictionTool()
 
-# Use the tool as per your requirements
-```
+# Process training data
+X_train, y_train = sex_predictor.process_training_data("preprocessed_data.h5ad")
 
----
+# Train the model
+sex_predictor.train(X_train, y_train, model_name="XGB")
 
-## Input and Output
+# Process test data
+X_test, cell_names = sex_predictor.process_test_data("sex_chimeric_gender_9_25.h5ad")
 
-### Input Data Format
+# Make predictions
+y_pred = sex_predictor.predict(X_test, model_name="XGB")
 
-- **H5AD Files:** Both training and test data should be in AnnData's `.h5ad` format.
-- **Gene Expression Matrix:**
-  - Genes as variables (`adata.var_names`).
-  - Cells as observations (`adata.obs_names`).
-- **Training Data Requirements:**
-  - Must include a `gender` column in `adata.obs` with binary labels:
-    - `0` for Female
-    - `1` for Male
-  - **Provided Training Data:**
-    - The repository includes a zipped training data file, `preprocessed_data.zip`.
-    - **Instructions to Access:**
-      - Unzip the file:
-        ```bash
-        unzip preprocessed_data.zip
-        ```
-      - This will extract `preprocessed_data.h5ad`, which you can use for training.
-- **Selected Genes:**
-  - The tool uses a predefined list of genes:
-    - `'Rpl35'`, `'Rps27rt'`, `'Rpl9-ps6'`, `'Rps27'`, `'Uba52'`, `'Lars2'`, `'Gm42418'`, `'Uty'`, `'Kdm5d'`, `'Eif2s3y'`, `'Ddx3y'`, `'Xist'`
-  - Ensure these genes are present in your datasets.
+# Save predictions
+sex_predictor.save_predictions(y_pred, cell_names, "predictions.csv")
 
-### Output Data
+# Save distribution plot
+sex_predictor.plot_prediction_distribution(y_pred, "distribution.pdf")
+Preparing Data
+Input Requirements
+Format: Both training and test data should be in AnnData's .h5ad format.
+Gene Expression Matrix:
+Genes as variables (adata.var_names).
+Cells as observations (adata.obs_names).
+Training Data:
+Includes a gender column in adata.obs with binary labels:
+0 for Female
+1 for Male.
+Training Data Provided
+We provide a zipped file containing preprocessed training data, preprocessed_data.zip.
 
-- **Predictions CSV:**
-  - Columns:
-    - `cell_id`: Cell identifiers from the test data.
-    - `predicted_sex`: Predicted sex (`Male` or `Female`).
-- **Distribution Plot:**
-  - Bar plot visualizing the percentage distribution of predicted sexes.
+Steps to Prepare Training Data:
+Download the training data from the repository.
+Unzip the file:
+bash
+Copy code
+unzip preprocessed_data.zip
+This will extract preprocessed_data.h5ad, which you can use for training.
+Test Data Requirements
+Gene expression data of the cells you want to predict.
+Should be in .h5ad format.
+Must include the following genes in adata.var_names:
+'Rpl35', 'Rps27rt', 'Rpl9-ps6', 'Rps27', 'Uba52', 'Lars2', 'Gm42418', 'Uty', 'Kdm5d', 'Eif2s3y', 'Ddx3y', 'Xist'.
+Outputs
+Predictions CSV (predictions.csv)
+Column	Description
+cell_id	Cell identifiers from test data
+predicted_sex	Predicted sex (Male or Female)
+Distribution Plot (distribution.pdf)
+A bar plot visualizing the percentage distribution of predicted sexes across the test dataset.
 
----
+Example Workflow
+Prepare Training Data (preprocessed_data.h5ad):
 
-## Example Workflow
+Ensure the training data includes a gender column (0 for Female, 1 for Male).
+Prepare Test Data (sex_chimeric_gender_9_25.h5ad):
 
-1. **Prepare Training Data (`preprocessed_data.h5ad`):**
+Ensure the test data includes the selected genes.
+Run CLI Prediction:
 
-   - **Access the Training Data:**
-     - The training data is provided in the repository as `preprocessed_data.zip`.
-     - Unzip the file:
-       ```bash
-       unzip preprocessed_data.zip
-       ```
-     - This will extract `preprocessed_data.h5ad`.
+bash
+Copy code
+cellsexid-run \
+    --train_data preprocessed_data.h5ad \
+    --test_data sex_chimeric_gender_9_25.h5ad \
+    --model XGB \
+    --output predictions.csv \
+    --plot distribution.pdf
+Review Outputs:
 
-   - **Contents of Training Data:**
-     - Contains gene expression data and a `gender` column with binary labels (`0` for Female, `1` for Male).
-
-2. **Prepare Test Data (`sex_chimeric_gender_9_25.h5ad`):**
-
-   - Contains gene expression data of cells to predict.
-   - Ensure that the selected genes are present in this dataset.
-
-3. **Run the Prediction Script:**
-
-   ```bash
-   cellsexid-run \
-       --train_data preprocessed_data.h5ad \
-       --test_data sex_chimeric_gender_9_25.h5ad \
-       --model XGB \
-       --output predictions.csv \
-       --plot distribution.pdf
-   ```
-
-4. **Review Outputs:**
-
-   - **`predictions.csv`:** Check the predicted sexes.
-   - **`distribution.pdf`:** Visualize the sex distribution.
+Open predictions.csv for detailed results.
+View the distribution plot in distribution.pdf.
 
 ---
 
