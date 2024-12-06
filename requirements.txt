@@ -1,0 +1,18 @@
+# Core libraries
+numpy>=1.20.0
+pandas>=1.3.0
+
+# Single-cell RNA-seq analysis
+scanpy>=1.9.0
+anndata>=0.8.0
+
+# Machine learning models
+scikit-learn>=1.0.0
+xgboost>=1.5.0
+
+# Visualization tools
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Additional libraries for utility and compatibility
+joblib>=1.0.0
