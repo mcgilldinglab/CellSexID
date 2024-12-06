@@ -14,5 +14,11 @@ xgboost>=1.5.0
 matplotlib>=3.4.0
 seaborn>=0.11.0
 
-# Additional libraries for utility and compatibility
+# Pipeline management
 joblib>=1.0.0
+
+# Argument parsing
+argparse>=1.4.0
+
+# Optional (if you use zsh or need to check paths)
+zsh>=0.5.0
