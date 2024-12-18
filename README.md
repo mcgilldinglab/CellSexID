@@ -11,7 +11,11 @@ CellSexID is a streamlined and user-friendly tool designed to predict the biolog
 - **b.** Experimental validation of CellSexID using chimeric mouse models. The single-cell RNA-seq data from chimeric mice are used to test classifiers pre-trained on a public dataset, with predictions based on the selected gene features. Diaphragm macrophages from female mice transplanted with male bone marrow are isolated, flow-sorted, barcoded, and sequenced, serving as ground truth for validating CellSexID predictions.
 - **c.** Evaluation of the model's predictive performance using various metrics calculated against flow cytometry-derived ground truth, providing an assessment of reliability.
 - **d.** Application of CellSexID for annotating cell origin in chimeric mice enables a range of single-cell analyses, supporting studies of cellular dynamics and differences between recipient and donor cells in diverse research contexts.
+ 
+## Publication
 
+Our research article detailing CellSexID is now available on bioRxiv:
+[CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v1)
 
 ## Key Contributions and Impact
 
@@ -341,11 +345,7 @@ cellsexid-run --train_data PATH --test_data PATH --model MODEL --output PATH --p
 
 All arguments are required.
 
- 
-## Publication
 
-Our research article detailing CellSexID is now available on bioRxiv:
-[CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v1)
 
 ## Contributing
 
