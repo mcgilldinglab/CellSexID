@@ -42,25 +42,7 @@ CellSexID demonstrated high concordance with flow cytometry ground truth data, v
 
 ## Getting Started
 
-### Prerequisites
-
-Before using CellSexID, ensure you have the following installed and set up:
-
-#### Python Environment
-- Python 3.8+
-- Anaconda or Miniconda (recommended for managing environments)
-
-#### Required Libraries
-- scanpy
-- anndata
-- pandas
-- numpy
-- scikit-learn
-- xgboost
-- matplotlib
-- seaborn
-
-You can install all required libraries using the requirements.txt file.
+ 
 
  
 
