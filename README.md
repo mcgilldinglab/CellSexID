@@ -32,12 +32,13 @@ CellSexID demonstrated high concordance with flow cytometry ground truth data, v
 
 ## Tech Features
 
-- **Simplified Workflow:** Trains on public datasets to ensure accessibility and reproducibility
-- **Single-Cell Focus:** Tailored for single-cell RNA-seq data input in H5AD format
-- **Accurate Predictions:** Utilizes advanced machine learning models (XGBoost, Logistic Regression, SVM, Random Forest)
-- **Visualization:** Provides options to visualize the distribution of predicted sexes
-- **Command-Line Interface:** Easy-to-use CLI for seamless integration into pipelines
-- **Detailed Tutorial:** Our notebook serves as a comprehensive tutorial covering all steps, including model training and prediction
+- **Python Package Integration:** Distributed as a Python package for direct integration into your existing data analysis workflows, offering programmatic control and flexibility.
+- **Simplified Workflow:** Trains on public datasets to ensure accessibility and reproducibility.
+- **Single-Cell Focus:** Tailored for single-cell RNA-seq data input in H5AD format.
+- **Accurate Predictions:** Utilizes advanced machine learning models (XGBoost, Logistic Regression, SVM, Random Forest).
+- **Visualization:** Provides options to visualize the distribution of predicted sexes.
+- **Command-Line Interface (CLI):** In addition to the Python package, offers a user-friendly CLI for seamless integration into command-line-based pipelines.
+- **Detailed Tutorial:** A comprehensive tutorial notebook covers all steps, including model training and prediction.
 
 ## Getting Started
 
@@ -61,35 +62,97 @@ Before using CellSexID, ensure you have the following installed and set up:
 
 You can install all required libraries using the requirements.txt file.
 
-### Installation
+ 
 
-#### Option 1: Install Directly from GitHub
+ 
+ 
+ 
+## Prerequisites
+
+Before installing CellSexID, ensure that you have the following prerequisites set up:
+
+### Anaconda Environment
+
+Using Anaconda is recommended for managing dependencies and creating isolated environments.
+
+1. **Install Anaconda or Miniconda:**
+   - [Download Anaconda](https://www.anaconda.com/products/distribution)
+   - [Download Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+
+2. **Set Up a Virtual Environment:**
+   Open your terminal or command prompt and execute the following commands to create and activate a new Conda environment:
+
+   ```bash
+   conda create -n cellsexid_env python=3.8
+   conda activate cellsexid_env
+   ```
+
+3. **Verify Python Installation:**
+   Ensure that Python 3.8 is installed in the environment:
+
+   ```bash
+   python --version
+   # Output should be Python 3.8.x
+   ```
+
+## Installation
+
+You can install CellSexID using one of the following methods:
+
+### Option 1: Install Directly from GitHub
+
+This method allows you to install the latest version of CellSexID directly from the GitHub repository.
+
 ```bash
 pip install git+https://github.com/mcgilldinglab/CellSexID.git
 ```
 
-#### Option 2: Clone the Repository
-1. Clone the repository:
-```bash
-git clone https://github.com/mcgilldinglab/CellSexID.git
-cd CellSexID
+### Option 2: Clone the Repository
+
+Cloning the repository gives you access to the source code, which can be useful for development or customization.
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/mcgilldinglab/CellSexID.git
+   cd CellSexID
+   ```
+
+2. **Install Dependencies:**
+
+   Ensure that you are in the `cellsexid_env` Conda environment before installing dependencies.
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Install the Package Locally:**
+
+   This installs CellSexID in editable mode, allowing you to make changes to the source code if needed.
+
+   ```bash
+   pip install .
+   ```
+
+## Verification
+
+After installation, you can verify that CellSexID is installed correctly by importing it in Python:
+
+```python
+import cellsexid
+print(cellsexid.__version__)
 ```
 
-2. Set up a virtual environment:
-```bash
-conda create -n cellsexid_env python=3.8
-conda activate cellsexid_env
-```
+If no errors occur and the version number is displayed, the installation was successful.
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+---
 
-4. Install the package locally:
-```bash
-pip install .
-```
+**Note:** Always ensure that you are operating within the `cellsexid_env` Conda environment to avoid conflicts with other Python packages on your system.
+ 
+ 
+
+
+
 
 ## Usage
 
