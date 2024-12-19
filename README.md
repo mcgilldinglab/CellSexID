@@ -214,7 +214,7 @@ We provide a zipped file containing preprocessed training data (`preprocessed_da
 2. Unzip the file:
    ```bash
    unzip preprocessed_data.zip
-
+```
 
 ### Test Data Requirements
 - Gene expression data of the cells you want to predict
