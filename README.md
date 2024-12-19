@@ -201,17 +201,20 @@ sex_predictor.plot_prediction_distribution(y_pred, "distribution.pdf")
  
 
 ### Training Data
-We provide a zipped file containing preprocessed training data (`preprocessed_data.zip`). The training data has undergone the following preprocessing steps:
-- Filtered to include genes present in at least 3 cells
-- Normalized to 10,000 counts per cell
+
+We provide a zipped file containing preprocessed training data (`preprocessed_data.zip`). The training data has been prepared using a standard [Scanpy-based preprocessing pipeline](https://scanpy-tutorials.readthedocs.io/en/latest/) that includes quality control, normalization, and log1p transformation steps.
+
+**Preprocessed Data:**
+- Quality controlled
+- Normalized to a fixed number of counts per cell
 - Log1p transformed
 
-Steps to prepare training data:
-1. Download the training data from the repository
+**Steps to prepare training data:**
+1. Download the `preprocessed_data.zip` file from the repository.
 2. Unzip the file:
-```bash
-unzip preprocessed_data.zip
-```
+   ```bash
+   unzip preprocessed_data.zip
+
 
 ### Test Data Requirements
 - Gene expression data of the cells you want to predict
