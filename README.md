@@ -60,14 +60,14 @@ anndata>=0.8.0
 
 #### Option 1: Direct Installation (Recommended)
 ```bash
-git clone https://github.com/yourusername/CellSexID.git
+git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
 pip install -e .
 ```
 
 #### Option 2: Manual Setup
 ```bash
-git clone https://github.com/yourusername/CellSexID.git
+git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
 pip install -r requirements.txt
 ```
@@ -83,7 +83,7 @@ conda install -c conda-forge scanpy pandas scikit-learn matplotlib
 pip install xgboost
 
 # Clone and install
-git clone https://github.com/yourusername/CellSexID.git
+git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
 pip install -e .
 ```
@@ -536,7 +536,7 @@ If you use CellSexID in your research, please cite:
   title={CellSexID: Single-Cell Sex Identification Tool},
   author={Your Name},
   year={2024},
-  url={https://github.com/yourusername/CellSexID},
+  url={https://github.com/mcgilldinglab/CellSexID},
   note={Version 2.0}
 }
 ```
@@ -559,7 +559,7 @@ We welcome contributions! Please follow these steps:
 ### Development Setup
 ```bash
 # Clone for development
-git clone https://github.com/yourusername/CellSexID.git
+git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
 
 # Install in development mode
@@ -592,10 +592,8 @@ Found a bug or have a feature request? Please open an issue:
 
 ## Contact
 
-- **Author**: Your Name  
-- **Email**: your.email@example.com
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-- **Lab Website**: https://yourlab.university.edu
+- **Author**: Huilin
+- **Email**: 2378174791@qq.com
 
 ---
 
