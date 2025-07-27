@@ -534,7 +534,7 @@ If you use CellSexID in your research, please cite:
 ```bibtex
 @software{cellsexid2024,
   title={CellSexID: Single-Cell Sex Identification Tool},
-  author={Your Name},
+  author={Huilin Tai, Qian Li, Jingtao Wang, Jiahui Tan, Ryann Lang, Basil J. Petrof, Jun Ding},
   year={2024},
   url={https://github.com/mcgilldinglab/CellSexID},
   note={Version 2.0}
