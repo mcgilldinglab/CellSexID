@@ -226,27 +226,4 @@ Xist,0.234,1
 Ddx3y,0.187,2
 Kdm5d,0.156,3
 ```
-
-## Error Handling
-
-### Common Errors
-
-#### `ValueError: Sex column 'sex' not found`
-- **Cause**: Specified sex column doesn't exist in `adata.obs`
-- **Solution**: Use correct column name in `sex_column` parameter
-
-#### `ValueError: No selected markers found in dataset`
-- **Cause**: None of the predefined markers exist in the dataset
-- **Solution**: Check gene naming convention (mouse vs human) or use custom genes
-
-#### `FileNotFoundError: File not found`
-- **Cause**: Input file path is incorrect
-- **Solution**: Verify file paths and ensure .h5ad files exist
-
-#### `ValueError: Model not trained yet`
-- **Cause**: Calling `predict()` before training
-- **Solution**: Call `fit()` or `fit_with_discovered_markers()` first
-
-#### `ImportError: Cannot find 'cellsexid' module`
-- **Cause**: Package not properly installed
-- **Solution**: Install package using `pip install .` or `pip install -e .`
+ 
