@@ -7,10 +7,10 @@
 ![CellSexID Overview](fig1.jpg)
 *Figure 1: Overview of the CellSexID workflow and validation approach.*
 
-## 📄 Publication
+## Publication
 
 **CellSexID: A Tool for Predicting Biological Sex from Single-Cell RNA-Seq Data**  
-📖 [Read the paper on bioRxiv](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v2)
+[Read the paper on bioRxiv](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v2)
 
 ---
 
@@ -64,18 +64,66 @@ cd CellSexID
 pip install -r requirements.txt
 ```
 
-## Tutorials
+## Quick Start
 
-### Tutorial 1: Basic Sex Prediction (`CellSexID_Human.ipynb`)
-Demonstrates sex prediction across human single-cell datasets including ATL (GSE294224), kidney donor cells (GSE151671), AML/MLL bone marrow (GSE289435), and thymic epithelial cells (GSE262749). Covers data preprocessing, model training, and cross-dataset validation.
+### Command Line Usage
 
-### Tutorial 2: Mouse Data Analysis (`CellSexID_Mouse.ipynb`) 
-Mouse single-cell data analysis for sex prediction, demonstrating species-specific gene marker identification and validation approaches with mouse sex markers.
+#### Basic Prediction
+```bash
+python cli.py --train_data training.h5ad --test_data test.h5ad --output predictions.csv
+```
+
+#### Custom Gene Markers
+```bash
+python cli.py --train_data training.h5ad --test_data test.h5ad \
+  --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y" --output results.csv
+```
+
+#### Automatic Gene Discovery
+```bash
+python cli.py --train_data training.h5ad --test_data test.h5ad \
+  --feature_selection --top_k 20 --min_models 3 --output results.csv
+```
+
+#### Command Line Parameters
+```bash
+--train_data FILE.h5ad     # Training data with sex labels
+--test_data FILE.h5ad      # Data for prediction
+--output RESULTS.csv       # Output file
+--model {LR,SVM,XGB,RF}    # Model choice (default: RF)
+--custom_genes "Gene1,Gene2"  # Specific gene list
+--feature_selection        # Enable automatic gene discovery
+--top_k N                  # Top genes per model (default: 20)
+--min_models N             # Minimum model consensus (default: 3)
+```
+
+### Python API
+
+```python
+from cellsexid.sex_prediction_tool import ImprovedSexPredictionTool
+
+# Initialize tool
+tool = ImprovedSexPredictionTool(
+    use_predefined_genes=True,
+    custom_genes=None
+)
+
+# Process data and train model
+X_train, y_train = tool.process_training_data("training.h5ad")
+tool.train(X_train, y_train, model_name='RF')
+
+# Make predictions
+X_test, cell_names = tool.process_test_data("test.h5ad")
+predictions = tool.predict(X_test, model_name='RF')
+
+# Save results
+tool.save_predictions(predictions, cell_names, "predictions.csv")
+```
 
 ## Data Requirements
 
-### Input Format: H5AD Only
-CellSexID accepts `.h5ad` files (AnnData format). 
+### Input Format
+CellSexID accepts `.h5ad` files (AnnData format).
 
 ### Training Data Structure
 ```python
@@ -98,43 +146,48 @@ sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 ```
 
-## Command Line Usage
+## Output Files
 
-### Basic Prediction
-```bash
-python cli.py --train_data training.h5ad --test_data test.h5ad --output predictions.csv
+### Predictions
+```csv
+cell_id,predicted_sex
+CELL001,Female
+CELL002,Male
+CELL003,Female
 ```
 
-### Custom Gene Markers
-```bash
-python cli.py --train_data training.h5ad --test_data test.h5ad \
-  --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y" --output results.csv
+### Feature Selection Results
+```
+feature_selection_results/
+├── LogisticRegression_feature_importances.csv
+├── SVC_feature_importances.csv  
+├── XGBClassifier_feature_importances.csv
+├── RandomForestClassifier_feature_importances.csv
+└── selected_genes_majority_vote.csv
 ```
 
-### Automatic Gene Discovery
-```bash
-python cli.py --train_data training.h5ad --test_data test.h5ad \
-  --feature_selection --top_k 20 --min_models 3 --output results.csv
-```
+## Tutorial Notebooks
 
-### Parameters
-```bash
---train_data FILE.h5ad     # Training data with sex labels
---test_data FILE.h5ad      # Data for prediction
---output RESULTS.csv       # Output file
---model {LR,SVM,XGB,RF}    # Model choice (default: RF)
---custom_genes "Gene1,Gene2"  # Specific gene list
---feature_selection        # Enable automatic gene discovery
---top_k N                  # Top genes per model (default: 20)
---min_models N             # Minimum model consensus (default: 3)
-```
+We provide three Jupyter notebooks demonstrating CellSexID usage:
 
-## Python API
+### Tutorial 1: Comprehensive Sex Prediction (`CellSexID_tutorial.ipynb`)
+Demonstrates sex prediction for mouse and human single-cell datasets. This notebook covers data preprocessing, model training with four machine learning algorithms (Logistic Regression, SVM, XGBoost, Random Forest), and cross-validation evaluation using predefined sex marker genes.
+
+**Mouse analysis**: MTX file loading, quality control, and prediction using 14 mouse sex markers  
+**Human analysis**: Human dataset processing and prediction using 9 human sex markers
+
+### Tutorial 2: Cross-Tissue Analysis - Human (`CellSexID_Human_cross_tissue.ipynb`) 
+Demonstrates cross-tissue validation by training models on one human tissue type and testing on another. This notebook addresses tissue-specific expression variations and model robustness across different human tissue types.
+
+### Tutorial 3: Cross-Tissue Analysis - Mouse (`CellSexID_Mouse_cross_tissue.ipynb`)
+Demonstrates cross-tissue sex prediction using mouse single-cell data. This notebook shows model transfer capabilities across different mouse tissue types and validates species-specific marker performance.
+
+## API Reference
 
 ### Core Classes and Methods
 
 ```python
-from sex_prediction_tool import ImprovedSexPredictionTool
+from cellsexid.sex_prediction_tool import ImprovedSexPredictionTool
 
 # Initialize tool
 tool = ImprovedSexPredictionTool(
@@ -178,26 +231,6 @@ tool.plot_prediction_distribution(predictions: np.ndarray, filename: str) -> Non
 - `cell_names`: List[str] of cell identifiers
 - `selected_genes`: List[str] of optimal gene markers
 
-## Output Files
-
-### Predictions
-```csv
-cell_id,predicted_sex
-CELL001,Female
-CELL002,Male
-CELL003,Female
-```
-
-### Feature Selection Results
-```
-feature_selection_results/
-├── LogisticRegression_feature_importances.csv
-├── SVC_feature_importances.csv  
-├── XGBClassifier_feature_importances.csv
-├── RandomForestClassifier_feature_importances.csv
-└── selected_genes_majority_vote.csv
-```
-
 ## Citation
 
 ```bibtex
@@ -218,5 +251,3 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - **Issues**: [GitHub Issues](https://github.com/mcgilldinglab/CellSexID/issues)
 - **Contact**: huilin.tai@mail.mcgill.ca
-
----
