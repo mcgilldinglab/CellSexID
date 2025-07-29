@@ -190,18 +190,4 @@ Kdm5d,0.156,3
 - **Cause**: Calling `predict()` before training
 - **Solution**: Call `fit()` or `fit_with_discovered_markers()` first
 
-### Data Validation
-
-The tool automatically validates:
-- File existence and format
-- Required columns in `adata.obs`
-- Gene availability in dataset
-- Data preprocessing state
-- Model training status
-
-## Performance Notes
-
-- **Memory usage**: Proportional to dataset size and number of genes
-- **Training time**: 2-dataset workflow: ~1-5 minutes; 3-dataset workflow: ~10-30 minutes
-- **Recommended dataset size**: 1,000-50,000 cells for optimal performance
-- **Gene filtering**: Use pre-filtered datasets (remove low-expression genes) for better performance
+ 
