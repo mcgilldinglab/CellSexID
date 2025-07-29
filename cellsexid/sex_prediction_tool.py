@@ -12,25 +12,63 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
-# Set matplotlib to a non-interactive backend
+# Set matplotlib to non-interactive backend
 import matplotlib
-matplotlib.use("Agg")  # Ensure plots are saved without displaying
+matplotlib.use("Agg")
 
-
-class ImprovedSexPredictionTool:
-    def __init__(self, use_predefined_genes=True, custom_genes=None):
+class SexPredictionTool:
+    def __init__(self, species='mouse', use_predefined_genes=True, custom_genes=None, sex_column='sex'):
         """
         Initialize the sex prediction tool.
         
         Parameters:
         -----------
+        species : str
+            'mouse' or 'human' for appropriate gene markers
         use_predefined_genes : bool
-            If True, use predefined gene markers. If False, will use feature selection.
+            True: Use predefined markers (2-dataset workflow)
+            False: Discover markers via feature selection (3-dataset workflow)
         custom_genes : list or None
-            Custom list of genes to use. If None, uses predefined markers.
+            Custom list of genes to use. Overrides predefined genes.
+        sex_column : str
+            Column name containing sex labels
         """
-        # Updated model parameters as requested
-        self.models = {
+        # Species-specific gene markers
+        self.mouse_markers = [
+            "Xist", "Ddx3y", "Gm42418", "Eif2s3y", "Rps27rt", "Rpl9-ps6",
+            "Kdm5d", "Uba52", "Rpl35", "Rpl36a-ps1", "Uty", "Wdr89",
+            "Lars2", "Rps27"
+        ]
+        
+        self.human_markers = [
+            "XIST", "DDX3Y", "KDM5D", "RPS4Y1", "EIF1AY", "USP9Y",
+            "UTY", "ZFY", "SRY", "TMSB4Y", "NLGN4Y"
+        ]
+        
+        if species not in ['mouse', 'human']:
+            raise ValueError("Species must be 'mouse' or 'human'")
+        
+        self.species = species
+        self.sex_column = sex_column
+        self.use_predefined_genes = use_predefined_genes
+        
+        # Set initial markers
+        if custom_genes is not None:
+            self.selected_markers = custom_genes
+        elif use_predefined_genes:
+            self.selected_markers = self.human_markers if species == 'human' else self.mouse_markers
+        else:
+            self.selected_markers = None  # Will be discovered
+        
+        # Model storage
+        self.models = self._initialize_models()
+        self.trained_model = None
+        self.is_fitted = False
+        self.feature_selection_results = None
+
+    def _initialize_models(self):
+        """Initialize ML models."""
+        return {
             'LR': Pipeline([
                 ('scaler', StandardScaler()),
                 ('model', LogisticRegression(max_iter=1000, random_state=551))
@@ -50,80 +88,220 @@ class ImprovedSexPredictionTool:
                     max_depth=10
                 ))
             ]),
-            'RF': Pipeline([  # Random Forest as default
+            'RF': Pipeline([
                 ('scaler', StandardScaler()),
                 ('model', RandomForestClassifier(max_depth=10, random_state=41))
             ])
         }
-        
-        # Updated predefined gene markers
-        self.predefined_genes = [
-            "Xist", "Ddx3y", "Gm42418", "Eif2s3y", "Rps27rt", "Rpl9-ps6",
-            "Kdm5d", "Uba52", "Rpl35", "Rpl36a-ps1", "Uty", "Wdr89",
-            "Lars2", "Rps27"
-        ]
-        
-        # Set genes to use
-        if custom_genes is not None:
-            self.selected_genes = custom_genes
-        elif use_predefined_genes:
-            self.selected_genes = self.predefined_genes
-        else:
-            self.selected_genes = None  # Will be determined by feature selection
-            
-        self.use_predefined_genes = use_predefined_genes
-        self.feature_selection_results = None
 
-    def load_training_data(self, h5ad_path):
-        """Load training data and return processed X, y for feature selection or training."""
-        adata = sc.read(h5ad_path)
-        print(f"Training data shape: {adata.X.shape}")
+    def _load_h5ad(self, filepath):
+        """Load h5ad file and return AnnData object."""
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File not found: {filepath}")
+        return sc.read(filepath)
+
+    def _extract_features_and_labels(self, adata, include_labels=True, use_all_genes=False):
+        """Extract features and optionally labels from AnnData object."""
         
-        # If using feature selection, return all genes
-        if not self.use_predefined_genes:
+        if use_all_genes:
+            # For feature selection, use ALL genes
             X = adata.X
             if not isinstance(X, np.ndarray):
                 X = X.toarray()
             X = pd.DataFrame(X, columns=adata.var_names)
         else:
-            # Use selected genes
-            available_genes = [gene for gene in self.selected_genes if gene in adata.var_names]
-            if not available_genes:
-                raise ValueError("None of the selected genes found in the training dataset.")
-            X = adata[:, available_genes].X
+            # Use selected markers
+            if self.selected_markers is None:
+                raise ValueError("No markers selected. Run discover_markers() first or use predefined markers.")
+            
+            # Check available markers
+            available_markers = [gene for gene in self.selected_markers if gene in adata.var_names]
+            if not available_markers:
+                missing = set(self.selected_markers) - set(adata.var_names)
+                raise ValueError(f"No selected markers found in dataset. Missing: {list(missing)[:5]}")
+            
+            print(f"Using {len(available_markers)}/{len(self.selected_markers)} markers")
+            
+            # Extract expression data
+            X = adata[:, available_markers].X
             if not isinstance(X, np.ndarray):
                 X = X.toarray()
-            X = pd.DataFrame(X, columns=available_genes)
         
-        # Encode labels
-        le = LabelEncoder()
-        y = pd.Series(le.fit_transform(adata.obs["gender"]))
-        
-        return X, y
+        if include_labels:
+            if self.sex_column not in adata.obs.columns:
+                available_cols = list(adata.obs.columns)
+                raise ValueError(f"Sex column '{self.sex_column}' not found. Available: {available_cols}")
+            
+            # Encode labels
+            le = LabelEncoder()
+            y = le.fit_transform(adata.obs[self.sex_column])
+            return X, y, adata.obs_names
+        else:
+            return X, adata.obs_names
 
-    def find_optimal_genes(self, X, y, top_k=20, min_models=3, save_results=True, output_dir="feature_importance_results"):
+    # =============================================================================
+    # WORKFLOW 1: SIMPLE 2-DATASET (PREDEFINED MARKERS)
+    # =============================================================================
+    
+    def fit(self, train_data, model_name='RF'):
         """
-        Perform feature selection using cross-validation across multiple models.
+        Train model using predefined markers (2-dataset workflow).
         
         Parameters:
         -----------
-        X : pd.DataFrame
-            Feature matrix (genes)
-        y : pd.Series
-            Target labels
-        top_k : int
-            Number of top features to consider from each model
-        min_models : int
-            Minimum number of models a feature must appear in to be selected
-        save_results : bool
-            Whether to save intermediate results
-        output_dir : str
-            Directory to save results
+        train_data : str
+            Path to training .h5ad file
+        model_name : str
+            Model to use ('LR', 'SVM', 'XGB', 'RF')
+        """
+        if not self.use_predefined_genes:
+            raise ValueError("fit() is for predefined markers. Use discover_markers() + fit_with_discovered_markers() instead.")
         
+        print(f"🧬 TRAINING WITH PREDEFINED {self.species.upper()} MARKERS")
+        print(f"Markers: {', '.join(self.selected_markers[:5])}{'...' if len(self.selected_markers) > 5 else ''}")
+        
+        # Load training data
+        adata = self._load_h5ad(train_data)
+        X_train, y_train, _ = self._extract_features_and_labels(adata, include_labels=True)
+        
+        # Train model
+        if model_name not in self.models:
+            raise ValueError(f"Model '{model_name}' not found. Available: {list(self.models.keys())}")
+        
+        print(f"Training {model_name} model with {X_train.shape[0]} samples...")
+        self.models[model_name].fit(X_train, y_train)
+        self.trained_model = model_name
+        self.is_fitted = True
+        
+        print(f"✅ {model_name} model trained successfully!")
+
+    # =============================================================================
+    # WORKFLOW 2: ADVANCED 3-DATASET (CUSTOM MARKER DISCOVERY)  
+    # =============================================================================
+    
+    def discover_markers(self, marker_data, top_k=20, min_models=3, save_results=True, 
+                        output_dir="feature_selection_results"):
+        """
+        Discover optimal markers using feature selection (3-dataset workflow step 1).
+        
+        Parameters:
+        -----------
+        marker_data : str
+            Path to .h5ad file for marker discovery (can be same as train_data)
+        top_k : int
+            Top K features per model
+        min_models : int  
+            Minimum models consensus
+        save_results : bool
+            Save intermediate results
+        output_dir : str
+            Output directory for results
+        """
+        if self.use_predefined_genes:
+            raise ValueError("discover_markers() is for custom marker discovery. Set use_predefined_genes=False.")
+        
+        print(f"🔍 DISCOVERING OPTIMAL MARKERS FROM {marker_data}")
+        
+        # Load data with ALL genes for feature selection
+        adata = self._load_h5ad(marker_data)
+        X, y, _ = self._extract_features_and_labels(adata, include_labels=True, use_all_genes=True)
+        
+        print(f"Dataset shape: {X.shape}")
+        y_series = pd.Series(y)
+        print(f"Target distribution: {y_series.value_counts().to_dict()}")
+        
+        # Perform feature selection using your existing logic
+        selected_markers = self.find_optimal_genes(X, y_series, top_k, min_models, save_results, output_dir)
+        
+        # Update selected markers
+        self.selected_markers = selected_markers
+        
+        print(f"🎯 DISCOVERED {len(selected_markers)} OPTIMAL MARKERS:")
+        for i, marker in enumerate(selected_markers[:10], 1):
+            print(f"  {i:2d}. {marker}")
+        if len(selected_markers) > 10:
+            print(f"  ... and {len(selected_markers)-10} more")
+        
+        return selected_markers
+
+    def fit_with_discovered_markers(self, train_data, model_name='RF'):
+        """
+        Train model using discovered markers (3-dataset workflow step 2).
+        
+        Parameters:
+        -----------
+        train_data : str
+            Path to training .h5ad file (can be same as marker_data)
+        model_name : str
+            Model to use
+        """
+        if self.use_predefined_genes:
+            raise ValueError("fit_with_discovered_markers() is for discovered markers. Use discover_markers() first.")
+        
+        if self.selected_markers is None:
+            raise ValueError("No markers discovered yet. Run discover_markers() first.")
+        
+        print(f"🧬 TRAINING WITH {len(self.selected_markers)} DISCOVERED MARKERS")
+        
+        # Load training data  
+        adata = self._load_h5ad(train_data)
+        X_train, y_train, _ = self._extract_features_and_labels(adata, include_labels=True)
+        
+        # Train model
+        if model_name not in self.models:
+            raise ValueError(f"Model '{model_name}' not found. Available: {list(self.models.keys())}")
+        
+        print(f"Training {model_name} model with {X_train.shape[0]} samples...")
+        self.models[model_name].fit(X_train, y_train)
+        self.trained_model = model_name
+        self.is_fitted = True
+        
+        print(f"✅ {model_name} model trained successfully!")
+
+    # =============================================================================
+    # COMMON PREDICTION METHOD
+    # =============================================================================
+    
+    def predict(self, test_data):
+        """
+        Make predictions on test data.
+        
+        Parameters:
+        -----------
+        test_data : str
+            Path to test .h5ad file
+            
         Returns:
         --------
-        selected_genes : list
-            List of genes selected by majority vote
+        predictions : np.ndarray
+            Binary predictions (0=Female, 1=Male)
+        cell_names : list
+            Cell identifiers
+        """
+        if not self.is_fitted:
+            raise ValueError("Model not trained yet. Run fit() or fit_with_discovered_markers() first.")
+        
+        print(f"🔮 MAKING PREDICTIONS WITH {self.trained_model} MODEL")
+        
+        # Load test data
+        adata = self._load_h5ad(test_data)
+        X_test, cell_names = self._extract_features_and_labels(adata, include_labels=False)
+        
+        # Make predictions
+        predictions = self.models[self.trained_model].predict(X_test)
+        
+        print(f"✅ Predictions completed for {len(predictions)} cells!")
+        
+        return predictions, cell_names
+
+    # =============================================================================
+    # FEATURE SELECTION METHODS (YOUR EXISTING LOGIC)
+    # =============================================================================
+    
+    def find_optimal_genes(self, X, y, top_k=20, min_models=3, save_results=True, output_dir="feature_selection_results"):
+        """
+        Perform feature selection using cross-validation across multiple models.
+        (Your existing logic integrated)
         """
         print("="*60)
         print("AUTOMATIC GENE MARKER DISCOVERY")
@@ -157,8 +335,7 @@ class ImprovedSexPredictionTool:
             score = majority_df[majority_df['Feature'] == gene]['CombinedNorm'].iloc[0]
             print(f"  {i:2d}. {gene:<15} (appeared in {count}/4 models, score: {score:.4f})")
         
-        # Update selected genes and save results
-        self.selected_genes = selected_genes
+        # Update results and save
         self.feature_selection_results = majority_df
         
         if save_results:
@@ -293,83 +470,24 @@ class ImprovedSexPredictionTool:
         merged.sort_values("CombinedNorm", ascending=False, inplace=True)
         return merged.reset_index(drop=True)
 
-    def train(self, X_train, y_train, model_name='RF'):  # RF as default
-        """Train the selected model."""
-        if model_name not in self.models:
-            raise ValueError(f"Model '{model_name}' not found. Available models: {list(self.models.keys())}")
-        
-        print(f"Training {model_name} model...")
-        self.models[model_name].fit(X_train, y_train)
-        print(f"✅ {model_name} model trained successfully!")
+    # =============================================================================
+    # UTILITY METHODS
+    # =============================================================================
 
-    def process_training_data(self, h5ad_path):
-        """Read and preprocess training data using selected genes."""
-        if self.selected_genes is None:
-            raise ValueError("No genes selected. Run find_optimal_genes() first or set use_predefined_genes=True")
-        
-        adata = sc.read(h5ad_path)
-        print(f"Training data shape: {adata.X.shape}")
-        available_genes = [gene for gene in self.selected_genes if gene in adata.var_names]
-        
-        if not available_genes:
-            raise ValueError("None of the selected genes found in the training dataset.")
-        
-        print(f"Using {len(available_genes)}/{len(self.selected_genes)} selected genes")
-        
-        X = adata[:, available_genes].X
-        if not isinstance(X, np.ndarray):
-            X = X.toarray()
-        
-        le = LabelEncoder()
-        y = le.fit_transform(adata.obs["gender"])
-        
-        return X, y
-
-    def process_test_data(self, h5ad_path):
-        """Read and preprocess test data using selected genes."""
-        if self.selected_genes is None:
-            raise ValueError("No genes selected. Run find_optimal_genes() first or set use_predefined_genes=True")
-        
-        adata = sc.read(h5ad_path)
-        print(f"Test data shape: {adata.X.shape}")
-        available_genes = [gene for gene in self.selected_genes if gene in adata.var_names]
-        
-        if not available_genes:
-            raise ValueError("None of the selected genes found in the test dataset.")
-        
-        print(f"Using {len(available_genes)}/{len(self.selected_genes)} selected genes for prediction")
-        
-        X_test = adata[:, available_genes].X
-        if not isinstance(X_test, np.ndarray):
-            X_test = X_test.toarray()
-        
-        return X_test, adata.obs_names
-
-    def predict(self, X_test, model_name='RF'):  # RF as default
-        """Make predictions using the trained model."""
-        if model_name not in self.models:
-            raise ValueError(f"Model '{model_name}' not found. Available models: {list(self.models.keys())}")
-        
-        print(f"Making predictions with {model_name} model...")
-        predictions = self.models[model_name].predict(X_test)
-        print(f"✅ Predictions completed!")
-        
-        return predictions
-
-    def save_predictions(self, y_pred, cell_names, output_file):
-        """Save predictions to a CSV file."""
+    def save_predictions(self, predictions, cell_names, output_file):
+        """Save predictions to CSV file."""
         pred_df = pd.DataFrame({
             'cell_id': cell_names,
-            'predicted_sex': ['Male' if p == 1 else 'Female' for p in y_pred]
+            'predicted_sex': ['Male' if p == 1 else 'Female' for p in predictions]
         })
         pred_df.to_csv(output_file, index=False)
         print(f"✅ Predictions saved to {output_file}")
 
-    def plot_prediction_distribution(self, y_pred, save_path):
+    def plot_prediction_distribution(self, predictions, save_path):
         """Save distribution plot of predictions."""
-        total = len(y_pred)
-        male_count = np.sum(y_pred == 1)
-        female_count = np.sum(y_pred == 0)
+        total = len(predictions)
+        male_count = np.sum(predictions == 1)
+        female_count = np.sum(predictions == 0)
         percentages = [female_count / total * 100, male_count / total * 100]
         
         plt.figure(figsize=(8, 6))
@@ -388,78 +506,85 @@ class ImprovedSexPredictionTool:
         plt.close()
         print(f"✅ Distribution plot saved to {save_path}")
 
-    def get_selected_genes(self):
-        """Return the currently selected genes."""
-        return self.selected_genes
+    def get_available_genes(self, h5ad_path):
+        """Check which predefined genes are available in dataset."""
+        adata = self._load_h5ad(h5ad_path)
+        if self.selected_markers is None:
+            print("No markers selected yet.")
+            return {'available': [], 'missing': []}
+        
+        available = [gene for gene in self.selected_markers if gene in adata.var_names]
+        missing = [gene for gene in self.selected_markers if gene not in adata.var_names]
+        
+        print(f"Species: {self.species}")
+        print(f"Available genes ({len(available)}): {available}")
+        print(f"Missing genes ({len(missing)}): {missing}")
+        
+        return {'available': available, 'missing': missing}
 
-    def print_summary(self):
-        """Print a summary of the current configuration."""
-        print("="*50)
+    def get_summary(self):
+        """Print current configuration summary."""
+        print("="*60)
         print("SEX PREDICTION TOOL SUMMARY")
-        print("="*50)
-        print(f"Available models: {list(self.models.keys())}")
-        print(f"Default model: RF (Random Forest)")
-        if self.selected_genes:
-            print(f"Selected genes ({len(self.selected_genes)}): {', '.join(self.selected_genes[:5])}{'...' if len(self.selected_genes) > 5 else ''}")
-        else:
-            print("No genes selected yet - run find_optimal_genes() or use predefined genes")
-        print("="*50)
+        print("="*60)
+        print(f"Species: {self.species}")
+        print(f"Mode: {'Predefined markers' if self.use_predefined_genes else 'Custom marker discovery'}")
+        print(f"Sex column: {self.sex_column}")
+        if self.selected_markers:
+            print(f"Selected markers ({len(self.selected_markers)}): {', '.join(self.selected_markers[:5])}{'...' if len(self.selected_markers) > 5 else ''}")
+        print(f"Model trained: {self.is_fitted} ({self.trained_model if self.is_fitted else 'None'})")
+        print("="*60)
 
 
-# Example usage functions
-def example_with_predefined_genes():
-    """Example: Using predefined gene markers"""
-    print("🧬 EXAMPLE: Using predefined gene markers")
-    
-    # Initialize with predefined genes
-    tool = ImprovedSexPredictionTool(use_predefined_genes=True)
-    tool.print_summary()
-    
-    # Load and process training data
-    # X_train, y_train = tool.process_training_data("path/to/training.h5ad")
-    
-    # Train model (RF is default)
-    # tool.train(X_train, y_train, model_name='RF')
-    
-    # Process test data and predict
-    # X_test, cell_names = tool.process_test_data("path/to/test.h5ad")
-    # predictions = tool.predict(X_test, model_name='RF')
-    
-    # Save results
-    # tool.save_predictions(predictions, cell_names, "predictions.csv")
-    # tool.plot_prediction_distribution(predictions, "distribution_plot.png")
+# =============================================================================
+# USAGE EXAMPLES
+# =============================================================================
 
+def example_2_dataset_workflow():
+    """Example: Simple 2-dataset workflow with predefined markers."""
+    print("📋 EXAMPLE: 2-Dataset Workflow (Predefined Markers)")
+    
+    # Initialize for predefined markers
+    tool = SexPredictionTool(species='mouse', use_predefined_genes=True)
+    
+    # Train and predict (2 datasets only)
+    tool.fit(train_data='train.h5ad', model_name='RF')
+    predictions, cell_names = tool.predict(test_data='test.h5ad')
+    tool.save_predictions(predictions, cell_names, 'predictions.csv')
 
-def example_with_feature_selection():
-    """Example: Using automatic feature selection"""
-    print("🔍 EXAMPLE: Using automatic feature selection")
+def example_3_dataset_workflow():
+    """Example: Advanced 3-dataset workflow with marker discovery."""
+    print("📋 EXAMPLE: 3-Dataset Workflow (Custom Marker Discovery)")
     
-    # Initialize for feature selection
-    tool = ImprovedSexPredictionTool(use_predefined_genes=False)
+    # Initialize for marker discovery
+    tool = SexPredictionTool(species='mouse', use_predefined_genes=False)
     
-    # Load training data for feature selection
-    # X, y = tool.load_training_data("path/to/training.h5ad")
+    # Step 1: Discover markers (can use same data as training)
+    tool.discover_markers(marker_data='marker_discovery.h5ad', top_k=20, min_models=3)
     
-    # Find optimal genes
-    # selected_genes = tool.find_optimal_genes(X, y, top_k=20, min_models=3)
+    # Step 2: Train with discovered markers
+    tool.fit_with_discovered_markers(train_data='train.h5ad', model_name='RF')
     
-    # Now use selected genes for training
-    # X_train, y_train = tool.process_training_data("path/to/training.h5ad")
-    # tool.train(X_train, y_train, model_name='RF')
+    # Step 3: Predict
+    predictions, cell_names = tool.predict(test_data='test.h5ad')
+    tool.save_predictions(predictions, cell_names, 'predictions.csv')
+
+def example_human_species():
+    """Example: Using human markers."""
+    print("📋 EXAMPLE: Human Species Workflow")
     
-    # Make predictions
-    # X_test, cell_names = tool.process_test_data("path/to/test.h5ad")
-    # predictions = tool.predict(X_test, model_name='RF')
-    
-    # Save results
-    # tool.save_predictions(predictions, cell_names, "predictions.csv")
-    # tool.plot_prediction_distribution(predictions, "distribution_plot.png")
+    tool = SexPredictionTool(species='human', use_predefined_genes=True, sex_column='gender')
+    tool.fit(train_data='human_train.h5ad', model_name='RF')
+    predictions, cell_names = tool.predict(test_data='human_test.h5ad')
+    tool.save_predictions(predictions, cell_names, 'human_predictions.csv')
 
 
 if __name__ == "__main__":
-    print("🚀 Improved Sex Prediction Tool")
-    print("Choose your workflow:")
-    print("1. Use predefined gene markers (quick)")
-    print("2. Automatic gene discovery (comprehensive)")
+    print("🚀 Complete Sex Prediction Tool")
+    print("Features:")
+    print("- Human and mouse species support")
+    print("- 2-dataset workflow (predefined markers)")
+    print("- 3-dataset workflow (custom marker discovery)")
+    print("- Configurable sex column name")
     print()
     print("See example functions for usage patterns.")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Simple run example - direct replacement for the original script
-Demonstrates the enhanced ImprovedSexPredictionTool with all use cases
+Complete CLI for Sex Prediction Tool
+Supports both 2-dataset and 3-dataset workflows with human/mouse species
 """
 
-# Suppress all warnings at the very beginning
+# Suppress warnings
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -15,191 +15,201 @@ import argparse
 import sys
 import os
 
-# Try different import methods to handle various project structures
+# Import the tool
 try:
-    from sex_prediction_tool import ImprovedSexPredictionTool
+    from sex_prediction_tool import SexPredictionTool
 except ImportError:
-    try:
-        from .sex_prediction_tool import ImprovedSexPredictionTool
-    except ImportError:
-        # If running from cellsexid directory, try parent directory
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        try:
-            from sex_prediction_tool import ImprovedSexPredictionTool
-        except ImportError:
-            print("❌ Error: Cannot find 'sex_prediction_tool.py'")
-            print("Please ensure 'sex_prediction_tool.py' is in the same directory as this script")
-            print("Available files in current directory:")
-            for f in os.listdir('.'):
-                if f.endswith('.py'):
-                    print(f"  - {f}")
-            sys.exit(1)
-
+    print("❌ Error: Cannot find 'sex_prediction_tool.py'")
+    print("Please ensure 'sex_prediction_tool.py' is in the same directory as this script")
+    sys.exit(1)
 
 def main():
-    # Parse command-line arguments with all new options
     parser = argparse.ArgumentParser(
-        description='Run sex prediction with enhanced features',
+        description='Sex Prediction Tool - Complete Implementation',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Basic usage (predefined genes, RF model - now default)
-  python run_example.py --train_data train.h5ad --test_data test.h5ad --output results.csv --plot dist.png
-
-  # Use custom genes
-  python run_example.py --train_data train.h5ad --test_data test.h5ad --output results.csv --plot dist.png \\
+WORKFLOW 1: Simple 2-Dataset (Predefined Markers)
+  # Mouse with predefined markers
+  python cli.py --species mouse --train train.h5ad --test test.h5ad --output results.csv
+  
+  # Human with predefined markers
+  python cli.py --species human --train train.h5ad --test test.h5ad --output results.csv
+  
+  # Custom genes
+  python cli.py --species mouse --train train.h5ad --test test.h5ad --output results.csv \\
     --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y"
 
-  # Automatic feature selection
-  python run_example.py --train_data train.h5ad --test_data test.h5ad --output results.csv --plot dist.png \\
-    --feature_selection --top_k 20 --min_models 3
+WORKFLOW 2: Advanced 3-Dataset (Custom Marker Discovery)  
+  # Discover markers + train + test (3 separate files)
+  python cli.py --species human --marker marker.h5ad --train train.h5ad --test test.h5ad --output results.csv
+  
+  # Same data for marker discovery and training (most common)
+  python cli.py --species mouse --marker train.h5ad --train train.h5ad --test test.h5ad --output results.csv
 
-  # Different model
-  python run_example.py --train_data train.h5ad --test_data test.h5ad --output results.csv --plot dist.png \\
-    --model XGB
+Additional Options:
+  --model RF              # Choose model (LR, SVM, XGB, RF)
+  --sex_column gender     # If sex labels are in 'gender' column instead of 'sex'
+  --plot dist.png         # Save prediction distribution plot
+  --top_k 15             # Top K features for marker discovery
+  --min_models 2         # Minimum model consensus for marker discovery
         """
     )
     
     # Required arguments
-    parser.add_argument('--train_data', required=True, 
-                       help='Path to preprocessed training h5ad file')
-    parser.add_argument('--test_data', required=True, 
-                       help='Path to test h5ad file')
-    parser.add_argument('--output', required=True, 
-                       help='Output file for predictions')
-    parser.add_argument('--plot', help='Output file for distribution plot')
+    parser.add_argument('--test', required=True, help='Test data (.h5ad file)')
+    parser.add_argument('--output', required=True, help='Output predictions (.csv file)')
     
-    # Model selection (RF is now default)
-    parser.add_argument('--model', default='RF', 
-                       choices=['LR', 'SVM', 'XGB', 'RF'],
-                       help='Model to use (default: RF)')
+    # Species selection
+    parser.add_argument('--species', choices=['mouse', 'human'], default='mouse',
+                       help='Species for gene markers (default: mouse)')
     
-    # Gene selection options
-    gene_group = parser.add_mutually_exclusive_group()
-    gene_group.add_argument('--feature_selection', action='store_true',
-                           help='Use automatic feature selection')
-    gene_group.add_argument('--custom_genes', type=str,
-                           help='Comma-separated custom genes (e.g., "Xist,Ddx3y,Kdm5d")')
+    # Data workflow selection
+    workflow_group = parser.add_mutually_exclusive_group(required=True)
+    workflow_group.add_argument('--train', 
+                               help='Training data for 2-dataset workflow (predefined markers)')
+    workflow_group.add_argument('--marker_train', nargs=2, metavar=('MARKER', 'TRAIN'),
+                               help='Marker discovery data + training data for 3-dataset workflow')
     
-    # Feature selection parameters
+    # Gene selection options (only for 2-dataset workflow)
+    parser.add_argument('--custom_genes', type=str,
+                       help='Comma-separated custom genes (e.g., "Xist,Ddx3y,Kdm5d") - only for 2-dataset workflow')
+    
+    # Model options
+    parser.add_argument('--model', choices=['LR', 'SVM', 'XGB', 'RF'], default='RF',
+                       help='ML model to use (default: RF)')
+    parser.add_argument('--sex_column', default='sex',
+                       help='Column name containing sex labels (default: sex)')
+    
+    # Feature selection options (only for 3-dataset workflow)
     parser.add_argument('--top_k', type=int, default=20,
-                       help='Top K features per model for feature selection (default: 20)')
+                       help='Top K features per model for marker discovery (default: 20)')
     parser.add_argument('--min_models', type=int, default=3,
-                       help='Minimum models threshold for feature selection (default: 3)')
-    parser.add_argument('--fs_output', type=str, default='feature_selection_results',
-                       help='Feature selection output directory')
+                       help='Minimum models consensus for marker discovery (default: 3)')
     
-    # Additional options
-    parser.add_argument('--verbose', '-v', action='store_true',
-                       help='Enable verbose output')
+    # Output options
+    parser.add_argument('--plot', help='Save prediction distribution plot')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     
     args = parser.parse_args()
     
+    # Determine workflow
+    if args.train:
+        workflow = "2-dataset"
+        use_predefined = True
+        files_to_check = [args.train, args.test]
+        
+        # Handle custom genes
+        custom_genes = None
+        if args.custom_genes:
+            custom_genes = [gene.strip() for gene in args.custom_genes.split(',') if gene.strip()]
+            
+    else:
+        workflow = "3-dataset"
+        use_predefined = False
+        marker_data, train_data = args.marker_train
+        files_to_check = [marker_data, train_data, args.test]
+        custom_genes = None
+        
+        if args.custom_genes:
+            print("⚠️ Warning: --custom_genes is ignored in 3-dataset workflow (markers will be discovered)")
+    
     # Validate input files
-    for file_path, name in [(args.train_data, 'training'), (args.test_data, 'test')]:
-        if not os.path.exists(file_path):
-            print(f"❌ Error: {name} data file not found: {file_path}")
+    for filepath in files_to_check:
+        if not os.path.exists(filepath):
+            print(f"❌ Error: File not found: {filepath}")
             sys.exit(1)
     
     try:
-        print("🧬 ENHANCED SEX PREDICTION TOOL")
-        print("=" * 50)
-        print(f"Training: {args.train_data}")
-        print(f"Test: {args.test_data}")
+        # Print workflow info
+        print("🧬 SEX PREDICTION TOOL")
+        print("=" * 60)
+        print(f"Species: {args.species}")
+        print(f"Workflow: {workflow}")
         print(f"Model: {args.model}")
+        print(f"Sex column: {args.sex_column}")
+        print(f"Test data: {args.test}")
         print(f"Output: {args.output}")
-        if args.plot:
-            print(f"Plot: {args.plot}")
         
-        # Initialize the tool based on mode
-        if args.feature_selection:
-            print("Mode: Automatic feature selection")
-            print(f"  - Top K: {args.top_k}")
-            print(f"  - Min models: {args.min_models}")
-            print(f"  - Results dir: {args.fs_output}")
-            
-            # Feature selection workflow
-            sex_predictor = ImprovedSexPredictionTool(use_predefined_genes=False)
-            
-            # Load data for feature selection
-            print("\n📚 Loading training data for feature selection...")
-            X, y = sex_predictor.load_training_data(args.train_data)
-            
-            # Perform feature selection
-            print("\n🧠 Discovering optimal genes...")
-            selected_genes = sex_predictor.find_optimal_genes(
-                X, y, 
-                top_k=args.top_k, 
-                min_models=args.min_models,
-                save_results=True,
-                output_dir=args.fs_output
-            )
-            
-        elif args.custom_genes:
-            custom_genes = [gene.strip() for gene in args.custom_genes.split(',') if gene.strip()]
-            print(f"Mode: Custom genes ({len(custom_genes)} genes)")
-            print(f"  - Genes: {', '.join(custom_genes)}")
-            
-            # Custom genes workflow
-            sex_predictor = ImprovedSexPredictionTool(use_predefined_genes=True, custom_genes=custom_genes)
-            
+        if workflow == "2-dataset":
+            print(f"Train data: {args.train}")
+            if custom_genes:
+                print(f"Mode: Custom genes ({len(custom_genes)} provided)")
+                print(f"Genes: {', '.join(custom_genes)}")
+            else:
+                print("Mode: Predefined markers")
         else:
-            print("Mode: Predefined gene markers")
-            
-            # Default predefined genes workflow
-            sex_predictor = ImprovedSexPredictionTool(use_predefined_genes=True)
+            marker_data, train_data = args.marker_train
+            print(f"Marker data: {marker_data}")
+            print(f"Train data: {train_data}")
+            print(f"Mode: Custom marker discovery (top_k={args.top_k}, min_models={args.min_models})")
         
-        print("=" * 50)
+        print("=" * 60)
+        
+        # Initialize tool
+        tool = SexPredictionTool(
+            species=args.species,
+            use_predefined_genes=use_predefined,
+            custom_genes=custom_genes,
+            sex_column=args.sex_column
+        )
         
         if args.verbose:
-            sex_predictor.print_summary()
+            tool.get_summary()
         
-        # Process training data
-        print("\n📚 Processing training data...")
-        X_train, y_train = sex_predictor.process_training_data(args.train_data)
-        
-        # Train the model
-        print(f"\n🤖 Training {args.model} model...")
-        sex_predictor.train(X_train, y_train, model_name=args.model)
-        
-        # Process test data
-        print("\n🔮 Processing test data...")
-        X_test, cell_names = sex_predictor.process_test_data(args.test_data)
+        # Execute workflow
+        if workflow == "2-dataset":
+            # WORKFLOW 1: Simple 2-dataset with predefined/custom markers
+            print(f"\n📚 WORKFLOW 1: Training with {'custom' if custom_genes else 'predefined'} markers...")
+            tool.fit(train_data=args.train, model_name=args.model)
+            
+        else:
+            # WORKFLOW 2: Advanced 3-dataset with marker discovery
+            marker_data, train_data = args.marker_train
+            
+            print("\n🔍 WORKFLOW 2 - Step 1: Discovering optimal markers...")
+            tool.discover_markers(
+                marker_data=marker_data,
+                top_k=args.top_k,
+                min_models=args.min_models,
+                save_results=True
+            )
+            
+            print("\n📚 WORKFLOW 2 - Step 2: Training with discovered markers...")
+            tool.fit_with_discovered_markers(train_data=train_data, model_name=args.model)
         
         # Make predictions
-        print("\n🎯 Making predictions...")
-        y_pred = sex_predictor.predict(X_test, model_name=args.model)
+        print("\n🔮 Making predictions...")
+        predictions, cell_names = tool.predict(test_data=args.test)
         
-        # Save predictions
+        # Save results
         print("\n💾 Saving results...")
-        sex_predictor.save_predictions(y_pred, cell_names, args.output)
+        tool.save_predictions(predictions, cell_names, args.output)
         
         # Plot distribution if requested
         if args.plot:
-            sex_predictor.plot_prediction_distribution(y_pred, args.plot)
+            tool.plot_prediction_distribution(predictions, args.plot)
         
-        # Print results summary
-        male_count = sum(y_pred == 1)
-        female_count = sum(y_pred == 0)
-        total = len(y_pred)
+        # Print summary
+        male_count = sum(predictions == 1)
+        female_count = sum(predictions == 0)
+        total = len(predictions)
         
         print(f"\n📊 PREDICTION SUMMARY:")
         print(f"   Total cells: {total}")
         print(f"   Female: {female_count} ({female_count/total*100:.1f}%)")
         print(f"   Male: {male_count} ({male_count/total*100:.1f}%)")
         
-        # Show selected genes
-        selected_genes = sex_predictor.get_selected_genes()
-        print(f"\n🧬 Used {len(selected_genes)} genes:")
-        print(f"   {', '.join(selected_genes[:8])}{'...' if len(selected_genes) > 8 else ''}")
+        markers_used = tool.selected_markers
+        print(f"\n🧬 Used {len(markers_used)} markers:")
+        print(f"   {', '.join(markers_used[:8])}{'...' if len(markers_used) > 8 else ''}")
         
-        if args.feature_selection:
-            print(f"\n📁 Feature selection results saved in: {args.fs_output}")
+        if workflow == "3-dataset":
+            print(f"\n📁 Feature selection results saved in: feature_selection_results/")
         
-        print("\n✅ SUCCESS!")
-        print(f"📄 Predictions: {args.output}")
+        print(f"\n✅ SUCCESS!")
+        print(f"📄 Predictions saved: {args.output}")
         if args.plot:
-            print(f"📊 Plot: {args.plot}")
+            print(f"📊 Plot saved: {args.plot}")
             
     except KeyboardInterrupt:
         print("\n⚠️ Process interrupted by user")
@@ -210,7 +220,6 @@ Examples:
             import traceback
             traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
