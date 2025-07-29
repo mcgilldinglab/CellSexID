@@ -1,6 +1,6 @@
 # CellSexID API Documentation
 
-## SexPredictionTool Class 
+## SexPredictionTool Class
 
 ### Initialization
 
@@ -27,7 +27,7 @@ tool = SexPredictionTool(
 
 ## Core Methods
 
-### 2-Dataset Workflow (Predefined Markers)
+### Training
 
 #### `fit(train_data, model_name='RF')`
 Train model using predefined or custom markers.
@@ -36,15 +36,13 @@ Train model using predefined or custom markers.
 - `train_data` (`str`): Path to training .h5ad file
 - `model_name` (`str`): Model type ('LR', 'SVM', 'XGB', 'RF')
 
-**Returns:** None
+**Returns:** `None`
 
 **Example:**
 ```python
 tool = SexPredictionTool(species='mouse', use_predefined_genes=True)
 tool.fit('training_data.h5ad', model_name='RF')
 ```
-
-### 3-Dataset Workflow (Custom Marker Discovery)
 
 #### `discover_markers(marker_data, top_k=20, min_models=3, save_results=True, output_dir="feature_selection_results")`
 Discover optimal markers using feature selection.
@@ -65,7 +63,7 @@ Train model using discovered markers.
 - `train_data` (`str`): Path to training .h5ad file
 - `model_name` (`str`): Model type ('LR', 'SVM', 'XGB', 'RF')
 
-**Returns:** None
+**Returns:** `None`
 
 ### Prediction
 
@@ -89,6 +87,8 @@ Save predictions to CSV file.
 - `cell_names` (`List[str]`): Cell identifiers  
 - `output_file` (`str`): Output CSV file path
 
+**Returns:** `None`
+
 #### `plot_prediction_distribution(predictions, save_path)`
 Save distribution plot of predictions.
 
@@ -96,16 +96,47 @@ Save distribution plot of predictions.
 - `predictions` (`np.ndarray`): Prediction array
 - `save_path` (`str`): Output plot file path
 
+**Returns:** `None`
+
 #### `get_available_genes(h5ad_path)`
 Check which predefined genes are available in dataset.
 
 **Parameters:**
 - `h5ad_path` (`str`): Path to .h5ad file
 
-**Returns:** `Dict` with 'available' and 'missing' gene lists
+**Returns:** `Dict[str, List[str]]` with 'available' and 'missing' gene lists
 
 #### `get_summary()`
 Print current configuration summary.
+
+**Returns:** `None`
+
+## Workflows
+
+### 2-Dataset Workflow (Predefined Markers)
+```python
+# Initialize with predefined markers
+tool = SexPredictionTool(species='mouse', use_predefined_genes=True)
+
+# Train and predict
+tool.fit(train_data='train.h5ad', model_name='RF')
+predictions, cell_names = tool.predict(test_data='test.h5ad')
+tool.save_predictions(predictions, cell_names, 'results.csv')
+```
+
+### 3-Dataset Workflow (Marker Discovery)
+```python
+# Initialize for marker discovery
+tool = SexPredictionTool(species='mouse', use_predefined_genes=False)
+
+# Discover markers, train, and predict
+tool.discover_markers(marker_data='discovery.h5ad', top_k=20, min_models=3)
+tool.fit_with_discovered_markers(train_data='train.h5ad', model_name='SVM')
+predictions, cell_names = tool.predict(test_data='test.h5ad')
+tool.save_predictions(predictions, cell_names, 'results.csv')
+```
+
+See `run_prediction.py` for detailed examples and tutorials.
 
 ## Command Line Interface
 
@@ -136,28 +167,28 @@ cellsexid --species mouse --marker_train discovery.h5ad train.h5ad --test test.h
 - `--plot`: Save distribution plot
 - `--verbose`: Detailed output
 
-### Complete CLI Examples
+### CLI Examples
 
-#### Workflow 1: Predefined Markers
+#### Predefined Markers
 ```bash
 # Basic usage
 cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv
 
-# With additional options
+# Human data with plot
 cellsexid --species human --train train.h5ad --test test.h5ad --output results.csv \
-  --model XGB --sex_column gender --plot distribution.png --verbose
+  --model XGB --sex_column sex --plot distribution.png
 
 # Custom genes
 cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv \
   --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y"
 ```
 
-#### Workflow 2: Marker Discovery
+#### Marker Discovery
 ```bash
 # Basic marker discovery
 cellsexid --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output results.csv
 
-# With custom parameters
+# Custom parameters
 cellsexid --species human --marker_train marker.h5ad train.h5ad --test test.h5ad --output results.csv \
   --top_k 15 --min_models 2 --model RF --verbose
 ```
@@ -202,7 +233,7 @@ Kdm5d,0.156,3
 
 #### `ValueError: Sex column 'sex' not found`
 - **Cause**: Specified sex column doesn't exist in `adata.obs`
-- **Solution**: Use `--sex_column` parameter with correct column name
+- **Solution**: Use correct column name in `sex_column` parameter
 
 #### `ValueError: No selected markers found in dataset`
 - **Cause**: None of the predefined markers exist in the dataset
@@ -219,25 +250,3 @@ Kdm5d,0.156,3
 #### `ImportError: Cannot find 'cellsexid' module`
 - **Cause**: Package not properly installed
 - **Solution**: Install package using `pip install .` or `pip install -e .`
-
-## Installation & Import
-
-### Package Installation
-```bash
-# Install from GitHub
-pip install git+https://github.com/mcgilldinglab/CellSexID.git
-
-# Or local installation
-git clone https://github.com/mcgilldinglab/CellSexID.git
-cd CellSexID
-pip install -e .
-```
-
-### Import Examples
-```python
-# Import main class
-from cellsexid import SexPredictionTool
-
-# Alternative import (equivalent)
-from cellsexid.sex_prediction_tool import SexPredictionTool
-```
