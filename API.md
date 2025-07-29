@@ -1,11 +1,11 @@
 # CellSexID API Documentation
 
-## SexPredictionTool Class
+## SexPredictionTool Class 
 
 ### Initialization
 
 ```python
-from cellsexid.sex_prediction_tool import SexPredictionTool
+from cellsexid import SexPredictionTool
 
 tool = SexPredictionTool(
     species='mouse',           # 'mouse' or 'human'
@@ -113,10 +113,10 @@ Print current configuration summary.
 
 ```bash
 # 2-dataset workflow (predefined markers)
-python cli.py --species mouse --train train.h5ad --test test.h5ad --output predictions.csv
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output predictions.csv
 
 # 3-dataset workflow (marker discovery)  
-python cli.py --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output predictions.csv
+cellsexid --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output predictions.csv
 ```
 
 ### Parameters
@@ -135,6 +135,32 @@ python cli.py --species mouse --marker_train discovery.h5ad train.h5ad --test te
 - `--min_models`: Minimum model consensus (default: 3)
 - `--plot`: Save distribution plot
 - `--verbose`: Detailed output
+
+### Complete CLI Examples
+
+#### Workflow 1: Predefined Markers
+```bash
+# Basic usage
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv
+
+# With additional options
+cellsexid --species human --train train.h5ad --test test.h5ad --output results.csv \
+  --model XGB --sex_column gender --plot distribution.png --verbose
+
+# Custom genes
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv \
+  --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y"
+```
+
+#### Workflow 2: Marker Discovery
+```bash
+# Basic marker discovery
+cellsexid --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output results.csv
+
+# With custom parameters
+cellsexid --species human --marker_train marker.h5ad train.h5ad --test test.h5ad --output results.csv \
+  --top_k 15 --min_models 2 --model RF --verbose
+```
 
 ## Data Types
 
@@ -190,4 +216,28 @@ Kdm5d,0.156,3
 - **Cause**: Calling `predict()` before training
 - **Solution**: Call `fit()` or `fit_with_discovered_markers()` first
 
- 
+#### `ImportError: Cannot find 'cellsexid' module`
+- **Cause**: Package not properly installed
+- **Solution**: Install package using `pip install .` or `pip install -e .`
+
+## Installation & Import
+
+### Package Installation
+```bash
+# Install from GitHub
+pip install git+https://github.com/mcgilldinglab/CellSexID.git
+
+# Or local installation
+git clone https://github.com/mcgilldinglab/CellSexID.git
+cd CellSexID
+pip install -e .
+```
+
+### Import Examples
+```python
+# Import main class
+from cellsexid import SexPredictionTool
+
+# Alternative import (equivalent)
+from cellsexid.sex_prediction_tool import SexPredictionTool
+```
