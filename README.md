@@ -34,22 +34,32 @@ CellSexID predicts biological sex from single-cell RNA-seq data using machine le
 
 ## Installation
 
-### Recommended: Conda Environment
+### Option 1: Package Installation (Recommended)
 ```bash
+# Install from GitHub
+pip install git+https://github.com/mcgilldinglab/CellSexID.git
+
+# Or clone and install locally
+git clone https://github.com/mcgilldinglab/CellSexID.git
+cd CellSexID
+pip install .
+```
+
+### Option 2: Development Installation
+```bash
+# Clone repository
+git clone https://github.com/mcgilldinglab/CellSexID.git
+cd CellSexID
+
 # Create clean environment
 conda create -n cellsexid python=3.9
 conda activate cellsexid
 
-# Install dependencies
-conda install -c conda-forge scanpy pandas scikit-learn matplotlib xgboost
-
-# Install CellSexID
-git clone https://github.com/mcgilldinglab/CellSexID.git
-cd CellSexID
+# Install dependencies and package
 pip install -e .
 ```
 
-### Alternative Installation
+### Option 3: Manual Installation (Development)
 ```bash
 git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
@@ -58,21 +68,21 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-### Basic Usage
+### Command Line Interface
 ```bash
 # Mouse data with predefined markers
-python cli.py --species mouse --train train.h5ad --test test.h5ad --output predictions.csv
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output predictions.csv
 
 # Human data with predefined markers
-python cli.py --species human --train train.h5ad --test test.h5ad --output predictions.csv
+cellsexid --species human --train train.h5ad --test test.h5ad --output predictions.csv
 
 # Custom marker discovery
-python cli.py --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output predictions.csv
+cellsexid --species mouse --marker_train discovery.h5ad train.h5ad --test test.h5ad --output predictions.csv
 ```
 
 ### Python API
 ```python
-from cellsexid.sex_prediction_tool import SexPredictionTool
+from cellsexid import SexPredictionTool
 
 # Initialize and train
 tool = SexPredictionTool(species='mouse', use_predefined_genes=True)
@@ -81,6 +91,56 @@ tool.fit(train_data='train.h5ad')
 # Make predictions
 predictions, cell_names = tool.predict(test_data='test.h5ad')
 tool.save_predictions(predictions, cell_names, 'predictions.csv')
+```
+
+## Command Line Usage
+
+### View All Options
+```bash
+cellsexid --help
+```
+
+### Workflow Examples
+
+#### Workflow 1: Simple 2-Dataset (Predefined Markers)
+```bash
+# Mouse with predefined markers
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv
+
+# Human with predefined markers  
+cellsexid --species human --train train.h5ad --test test.h5ad --output results.csv
+
+# Custom genes
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv \
+  --custom_genes "Xist,Ddx3y,Kdm5d,Eif2s3y"
+```
+
+#### Workflow 2: Advanced 3-Dataset (Custom Marker Discovery)
+```bash
+# Discover markers + train + test (3 separate files)
+cellsexid --species human --marker_train marker.h5ad train.h5ad --test test.h5ad --output results.csv
+
+# Same data for marker discovery and training (most common)
+cellsexid --species mouse --marker_train train.h5ad train.h5ad --test test.h5ad --output results.csv
+```
+
+#### Additional Options
+```bash
+# Choose different model
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv --model XGB
+
+# Custom sex column name
+cellsexid --species human --train train.h5ad --test test.h5ad --output results.csv --sex_column gender
+
+# Generate distribution plot
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv --plot distribution.png
+
+# Feature selection parameters for marker discovery
+cellsexid --species mouse --marker_train train.h5ad train.h5ad --test test.h5ad --output results.csv \
+  --top_k 15 --min_models 2
+
+# Verbose output
+cellsexid --species mouse --train train.h5ad --test test.h5ad --output results.csv --verbose
 ```
 
 ## Data Requirements
