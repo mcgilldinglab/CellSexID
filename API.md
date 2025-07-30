@@ -23,7 +23,7 @@ tool = SexPredictionTool(
 
 #### Predefined Markers
 - **Mouse**: `Xist`, `Ddx3y`, `Gm42418`, `Eif2s3y`, `Rps27rt`, `Rpl9-ps6`, `Kdm5d`, `Uba52`, `Rpl35`, `Rpl36a-ps1`, `Uty`, `Wdr89`, `Lars2`, `Rps27`
-- **Human**: `XIST`, `DDX3Y`, `KDM5D`, `RPS4Y1`, `EIF1AY`, `USP9Y`, `UTY`, `ZFY`, `SRY`, `TMSB4Y`, `NLGN4Y`
+- **Human**: `RPS4Y1`, `EIF1AY`, `XIST`, `DDX3Y`, `UTY`, `KDM5D`, `IFIT3`, `IFIT2`, `RPS4X`
 
 ## Core Methods
 
