@@ -65,11 +65,13 @@ git clone https://github.com/mcgilldinglab/CellSexID.git
 cd CellSexID
 pip install -r requirements.txt
 ```
+
 ### Using the included datasets:
 
 Training data: Extract preprocessed_training_data.h5ad.zip - ready to use immediately
 
 Test datasets: Extract data.zip for additional validation datasets
+
 ## Quick Start
 
 ### Command Line Interface
@@ -159,20 +161,66 @@ adata.var_names      # Gene symbols
 
 Data should be preprocessed (filtered, normalized, log-transformed). See tutorials for preprocessing examples.
 
-## Tutorials
+## Tutorials and Examples
 
-### Tutorial 1: Basic Sex Prediction (`CellSexID_tutorial.ipynb`)
+### Python API Tutorial (`run_prediction.py`)
+Comprehensive Python script demonstrating all features of the SexPredictionTool API, including:
+
+- **Example 1**: Basic usage with predefined gene markers (2-dataset workflow)
+- **Example 2**: Using custom gene markers (2-dataset workflow)
+- **Example 3**: Automatic feature selection (3-dataset workflow)
+- **Example 4**: Model comparison across all available algorithms
+- **Example 5**: Human species analysis with custom sex column names
+- **Example 6**: CLI command simulation and programmatic usage
+
+Run the tutorial:
+```bash
+# Run all examples
+python run_prediction.py
+
+# Run specific example
+python run_prediction.py --example 1
+
+# Customize data paths
+python run_prediction.py --train_data your_train.h5ad --test_data your_test.h5ad
+```
+
+### Jupyter Notebook Tutorials
+
+#### Tutorial 1: Basic Sex Prediction (`CellSexID_tutorial.ipynb`)
 Demonstrates sex prediction for mouse and human single-cell datasets, covering data preprocessing, model training with multiple algorithms, and cross-validation evaluation.
 
-### Tutorial 2: Cross-Tissue Analysis - Human (`CellSexID_Human_cross_tissue.ipynb`) 
+#### Tutorial 2: Cross-Tissue Analysis - Human (`CellSexID_Human_cross_tissue.ipynb`) 
 Cross-tissue validation by training models on one tissue type and testing on another, addressing tissue-specific expression variations.
 
-### Tutorial 3: Cross-Tissue Analysis - Mouse (`CellSexID_Mouse_cross_tissue.ipynb`)
+#### Tutorial 3: Cross-Tissue Analysis - Mouse (`CellSexID_Mouse_cross_tissue.ipynb`)
 Cross-tissue sex prediction using mouse single-cell data, demonstrating model transfer capabilities across different tissue types.
 
 ## API Reference
 
-See [API.md](API.md) for detailed documentation of classes, methods, and parameters.
+The `SexPredictionTool` class provides the main interface for sex prediction:
+
+### Key Methods
+
+- `__init__(species, use_predefined_genes, custom_genes, sex_column)`: Initialize the tool
+- `fit(train_data, model_name)`: Train model with predefined/custom genes
+- `predict(test_data)`: Make sex predictions
+- `discover_markers(marker_data, top_k, min_models)`: Automatic feature selection
+- `fit_with_discovered_markers(train_data, model_name)`: Train with discovered markers
+- `save_predictions(predictions, cell_names, output_file)`: Save results
+- `plot_prediction_distribution(predictions, plot_file)`: Generate visualization
+
+### Available Models
+- `'LR'`: Logistic Regression
+- `'SVM'`: Support Vector Machine
+- `'XGB'`: XGBoost Classifier
+- `'RF'`: Random Forest (default)
+
+### Supported Species
+- `'mouse'`: Mouse-specific gene markers
+- `'human'`: Human-specific gene markers
+
+See [API.md](API.md) for detailed documentation of all classes, methods, and parameters.
 
 ## Output Files
 
@@ -194,6 +242,9 @@ feature_selection_results/
 └── selected_genes_majority_vote.csv
 ```
 
+### Distribution Plots
+Visual representations of prediction distributions saved as PNG files when using the `--plot` option or `plot_prediction_distribution()` method.
+
 ## Citation
 
 ```bibtex
@@ -213,4 +264,5 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/mcgilldinglab/CellSexID/issues)
+- **API Tutorial**: See `run_prediction.py` for comprehensive Python API examples
 - **Contact**: huilin.tai@mail.mcgill.ca
