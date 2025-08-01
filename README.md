@@ -12,6 +12,7 @@
 **CellSexID: A Tool for Predicting Sex from Single-Cell RNA-Seq Data**  
 [Read the paper on bioRxiv](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v2)
 
+
 ---
 
 CellSexID predicts biological sex from single-cell RNA-seq data using machine learning approaches with automatic feature selection capabilities.
