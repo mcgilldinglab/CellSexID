@@ -5,11 +5,12 @@ A comprehensive toolkit for predicting biological sex from single-cell RNA-seq d
 using machine learning approaches with automatic feature selection capabilities.
 """
 
-from .sex_prediction_tool import ImprovedSexPredictionTool
+from .sex_prediction_tool import SexPredictionTool
+
 
 __version__ = "1.0.0"
 __author__ = "Your Name"
 
 # Make the main class easily accessible
-__all__ = ['ImprovedSexPredictionTool']
+__all__ = ['SexPredictionTool']
 
