@@ -9,7 +9,7 @@
 
 ## Publication
 
-**CellSexID: A Tool for Predicting Sex from Single-Cell RNA-Seq Data**  
+**CellSexID: Sex-Based Computational Tracking of Cellular Origins in Chimeric Models**  
 [Read the paper on bioRxiv](https://www.biorxiv.org/content/10.1101/2024.12.02.626449v2)
 
 
