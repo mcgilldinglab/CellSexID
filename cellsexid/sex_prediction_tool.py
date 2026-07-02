@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import matplotlib.pyplot as plt
+from anndata import AnnData
 from datetime import datetime
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LogisticRegression
@@ -94,11 +95,18 @@ class SexPredictionTool:
             ])
         }
 
-    def _load_h5ad(self, filepath):
-        """Load h5ad file and return AnnData object."""
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"File not found: {filepath}")
-        return sc.read(filepath)
+    def _get_adata(self, data):
+        """Return an AnnData object from an AnnData instance or .h5ad path."""
+        if isinstance(data, AnnData):
+            return data
+
+        if isinstance(data, (str, os.PathLike)):
+            filepath = os.fspath(data)
+            if not os.path.exists(filepath):
+                raise FileNotFoundError(f"File not found: {filepath}")
+            return sc.read(filepath)
+
+        raise TypeError("Expected an AnnData object or path to a .h5ad file.")
 
     def _extract_features_and_labels(self, adata, include_labels=True, use_all_genes=False):
         """Extract features and optionally labels from AnnData object."""
@@ -149,8 +157,8 @@ class SexPredictionTool:
         
         Parameters:
         -----------
-        train_data : str
-            Path to training .h5ad file
+        train_data : str or AnnData
+            Path to training .h5ad file or in-memory AnnData object
         model_name : str
             Model to use ('LR', 'SVM', 'XGB', 'RF')
         """
@@ -161,7 +169,7 @@ class SexPredictionTool:
         print(f"Markers: {', '.join(self.selected_markers[:5])}{'...' if len(self.selected_markers) > 5 else ''}")
         
         # Load training data
-        adata = self._load_h5ad(train_data)
+        adata = self._get_adata(train_data)
         X_train, y_train, _ = self._extract_features_and_labels(adata, include_labels=True)
         
         # Train model
@@ -186,8 +194,8 @@ class SexPredictionTool:
         
         Parameters:
         -----------
-        marker_data : str
-            Path to .h5ad file for marker discovery (can be same as train_data)
+        marker_data : str or AnnData
+            Path to .h5ad file or AnnData object for marker discovery
         top_k : int
             Top K features per model
         min_models : int  
@@ -203,7 +211,7 @@ class SexPredictionTool:
         print(f"🔍 DISCOVERING OPTIMAL MARKERS FROM {marker_data}")
         
         # Load data with ALL genes for feature selection
-        adata = self._load_h5ad(marker_data)
+        adata = self._get_adata(marker_data)
         X, y, _ = self._extract_features_and_labels(adata, include_labels=True, use_all_genes=True)
         
         print(f"Dataset shape: {X.shape}")
@@ -230,8 +238,8 @@ class SexPredictionTool:
         
         Parameters:
         -----------
-        train_data : str
-            Path to training .h5ad file (can be same as marker_data)
+        train_data : str or AnnData
+            Path to training .h5ad file or in-memory AnnData object
         model_name : str
             Model to use
         """
@@ -244,7 +252,7 @@ class SexPredictionTool:
         print(f"🧬 TRAINING WITH {len(self.selected_markers)} DISCOVERED MARKERS")
         
         # Load training data  
-        adata = self._load_h5ad(train_data)
+        adata = self._get_adata(train_data)
         X_train, y_train, _ = self._extract_features_and_labels(adata, include_labels=True)
         
         # Train model
@@ -268,8 +276,8 @@ class SexPredictionTool:
         
         Parameters:
         -----------
-        test_data : str
-            Path to test .h5ad file
+        test_data : str or AnnData
+            Path to test .h5ad file or in-memory AnnData object
             
         Returns:
         --------
@@ -284,7 +292,7 @@ class SexPredictionTool:
         print(f"🔮 MAKING PREDICTIONS WITH {self.trained_model} MODEL")
         
         # Load test data
-        adata = self._load_h5ad(test_data)
+        adata = self._get_adata(test_data)
         X_test, cell_names = self._extract_features_and_labels(adata, include_labels=False)
         
         # Make predictions
@@ -506,9 +514,9 @@ class SexPredictionTool:
         plt.close()
         print(f"✅ Distribution plot saved to {save_path}")
 
-    def get_available_genes(self, h5ad_path):
+    def get_available_genes(self, data):
         """Check which predefined genes are available in dataset."""
-        adata = self._load_h5ad(h5ad_path)
+        adata = self._get_adata(data)
         if self.selected_markers is None:
             print("No markers selected yet.")
             return {'available': [], 'missing': []}

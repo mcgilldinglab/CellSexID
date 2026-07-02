@@ -17,11 +17,9 @@ import os
 
 # Import the tool
 try:
-    from sex_prediction_tool import SexPredictionTool
+    from .sex_prediction_tool import SexPredictionTool
 except ImportError:
-    print("❌ Error: Cannot find 'sex_prediction_tool.py'")
-    print("Please ensure 'sex_prediction_tool.py' is in the same directory as this script")
-    sys.exit(1)
+    from sex_prediction_tool import SexPredictionTool
 
 def main():
     parser = argparse.ArgumentParser(

@@ -100,6 +100,14 @@ predictions, cell_names = tool.predict(test_data='test.h5ad')
 tool.save_predictions(predictions, cell_names, 'predictions.csv')
 ```
 
+`fit`, `predict`, `discover_markers`, `fit_with_discovered_markers`, and
+`get_available_genes` also accept in-memory `AnnData` objects instead of paths:
+
+```python
+tool.fit(train_data=train_adata)
+predictions, cell_names = tool.predict(test_data=test_adata)
+```
+
 ## Command Line Usage
 
 ### View All Options
@@ -204,10 +212,10 @@ The `SexPredictionTool` class provides the main interface for sex prediction:
 ### Key Methods
 
 - `__init__(species, use_predefined_genes, custom_genes, sex_column)`: Initialize the tool
-- `fit(train_data, model_name)`: Train model with predefined/custom genes
-- `predict(test_data)`: Make sex predictions
-- `discover_markers(marker_data, top_k, min_models)`: Automatic feature selection
-- `fit_with_discovered_markers(train_data, model_name)`: Train with discovered markers
+- `fit(train_data, model_name)`: Train model with predefined/custom genes from a path or `AnnData`
+- `predict(test_data)`: Make sex predictions from a path or `AnnData`
+- `discover_markers(marker_data, top_k, min_models)`: Automatic feature selection from a path or `AnnData`
+- `fit_with_discovered_markers(train_data, model_name)`: Train with discovered markers from a path or `AnnData`
 - `save_predictions(predictions, cell_names, output_file)`: Save results
 - `plot_prediction_distribution(predictions, plot_file)`: Generate visualization
 
