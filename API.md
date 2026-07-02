@@ -33,7 +33,7 @@ tool = SexPredictionTool(
 Train model using predefined or custom markers.
 
 **Parameters:**
-- `train_data` (`str`): Path to training .h5ad file
+- `train_data` (`str` or `AnnData`): Path to training .h5ad file or in-memory AnnData object
 - `model_name` (`str`): Model type ('LR', 'SVM', 'XGB', 'RF')
 
 **Returns:** `None`
@@ -48,7 +48,7 @@ tool.fit('training_data.h5ad', model_name='RF')
 Discover optimal markers using feature selection.
 
 **Parameters:**
-- `marker_data` (`str`): Path to .h5ad file for marker discovery
+- `marker_data` (`str` or `AnnData`): Path to .h5ad file or in-memory AnnData object for marker discovery
 - `top_k` (`int`): Top K features per model (default: 20)
 - `min_models` (`int`): Minimum models consensus (default: 3)
 - `save_results` (`bool`): Save intermediate results (default: True)
@@ -60,7 +60,7 @@ Discover optimal markers using feature selection.
 Train model using discovered markers.
 
 **Parameters:**
-- `train_data` (`str`): Path to training .h5ad file
+- `train_data` (`str` or `AnnData`): Path to training .h5ad file or in-memory AnnData object
 - `model_name` (`str`): Model type ('LR', 'SVM', 'XGB', 'RF')
 
 **Returns:** `None`
@@ -71,7 +71,7 @@ Train model using discovered markers.
 Make predictions on test data.
 
 **Parameters:**
-- `test_data` (`str`): Path to test .h5ad file
+- `test_data` (`str` or `AnnData`): Path to test .h5ad file or in-memory AnnData object
 
 **Returns:** 
 - `predictions` (`np.ndarray`): Binary predictions (0=Female, 1=Male)
@@ -98,11 +98,11 @@ Save distribution plot of predictions.
 
 **Returns:** `None`
 
-#### `get_available_genes(h5ad_path)`
+#### `get_available_genes(data)`
 Check which predefined genes are available in dataset.
 
 **Parameters:**
-- `h5ad_path` (`str`): Path to .h5ad file
+- `data` (`str` or `AnnData`): Path to .h5ad file or in-memory AnnData object
 
 **Returns:** `Dict[str, List[str]]` with 'available' and 'missing' gene lists
 
@@ -122,6 +122,13 @@ tool = SexPredictionTool(species='mouse', use_predefined_genes=True)
 tool.fit(train_data='train.h5ad', model_name='RF')
 predictions, cell_names = tool.predict(test_data='test.h5ad')
 tool.save_predictions(predictions, cell_names, 'results.csv')
+```
+
+The same workflow also accepts in-memory AnnData objects:
+
+```python
+tool.fit(train_data=train_adata, model_name='RF')
+predictions, cell_names = tool.predict(test_data=test_adata)
 ```
 
 ### 3-Dataset Workflow (Marker Discovery)
