@@ -1,0 +1,19 @@
+HISTORICAL LICENSE AND ATTRIBUTION NOTICES — CellSexID
+
+Baseline before the licensing update:
+https://github.com/mcgilldinglab/CellSexID/commit/6395d3bd25d97584872ad4c07e8b19336a0201e5
+
+The following prior notices are retained verbatim. Earlier grants and notices
+continue to apply to the material they cover; the new licensing notice does
+not revoke those rights or relicense third-party material.
+
+No root license file was present in the captured baseline.
+
+--- Prior licensing statements in README.md ---
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## License
+MIT License - see [LICENSE](LICENSE) file for details.
+
+--- Prior license metadata in setup.py ---
+        "License :: OSI Approved :: MIT License",
+
